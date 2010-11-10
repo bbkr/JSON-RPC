@@ -1,0 +1,54 @@
+JSON-RPC implementation for PERL 6
+
+
+SPEC
+
+http://json-rpc.org/wiki/specification
+
+
+CLIENT
+
+Sample connection.
+GetResponse API used as an example
+http://dev.getresponse.com/api-doc/
+
+    use JSON::RPC::Client
+    
+    my $client = JSON::RPC::Client.new(
+        url             => 'api2.getresponse.com',
+        json_methods    => [ 'ping', 'get_campaigns' ],
+    );
+    
+    my $response = $client.ping( 'MY_API_KEY' ); # { "ping" => "pong" }
+
+Where
+
+* url - is the URL of the service
+* json_methods - methods that will be installed in client class,
+                 this will be replaced later by CANDO autoload
+
+
+SERVER
+
+Not yet implemented.
+
+
+TODO
+
+* HTTP and JSON exceptions
+* URL parsing and path support
+* GET/POST selection
+* port selection
+* Server
+* tests
+  (once Server is ready, to avoid online tests)
+
+
+THANKS
+
+Special thanks to Moritz and Masak for help on #perl6
+
+
+CONTACT
+
+ask <bbkr> on #perl6
