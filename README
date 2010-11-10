@@ -1,4 +1,4 @@
-JSON-RPC implementation for PERL 6
+JSON-RPC implementation for Perl 6
 
 
 SPEC
@@ -52,3 +52,4 @@ Special thanks to Moritz and Masak for help on #perl6
 CONTACT
 
 ask <bbkr> on #perl6
+http://bbkr.org
