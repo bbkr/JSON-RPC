@@ -21,7 +21,7 @@ http://dev.getresponse.com/api-doc/
     
     my $response = $client.ping( 'MY_API_KEY' ); # { "ping" => "pong" }
 
-Whereś
+Where:
 
 * url - is the URL of the service
 * json_methods - methods that will be installed in client class,
@@ -47,8 +47,10 @@ TODO
 
 THANKS
 
-Special thanks to Moritz and Masak for help on #perl6
-and to cosimo for reviewing pull requests on GitHub.
+Special thanks to:
+- Moritz and Masak for help on #perl6
+- Cosimo for reviewing pull requests on GitHub
+- Tadzik for module management help
 
 
 CONTACT

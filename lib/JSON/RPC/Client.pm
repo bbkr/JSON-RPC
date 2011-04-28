@@ -8,6 +8,8 @@ use JSON::Tiny;
 # or included in Rakudo * distributions
 use LWP::Simple;
 
+our $VERSION = '0.2';
+
 has Str $.host is rw;
 has Array $.json_methods is rw;
 

@@ -2,6 +2,8 @@
     "name" : "JSON::RPC",
     "version" : "0.2",
     "description" : "JSON-RPC client",
+    "author" : "Pawel Pabian",
+    "authority" : "bbkr",
     "depends" : [ "JSON::Tiny", "LWP::Simple" ],
     "source-url" : "git://github.com/bbkr/jsonrpc.git"
 }
