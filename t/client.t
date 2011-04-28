@@ -3,6 +3,8 @@ BEGIN { @*INC.unshift('lib') }
 use Test;
 use JSON::RPC::Client;
 
+plan( 7 );
+
 # Autoloading tests
 
 my $c1 = JSON::RPC::Client.new(
@@ -34,3 +36,5 @@ try {
     $c3.no_such_method( );
     CATCH { ok $! ~~ / MethodNotFound /, 'live test invalid request json error extracted' }
 };
+
+done;
