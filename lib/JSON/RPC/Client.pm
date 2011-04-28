@@ -4,13 +4,15 @@ class JSON::RPC::Client;
 # or included in Rakudo * distributions
 use JSON::Tiny;
 
-use HTTP::Response::Grammar;
+# available at https://github.com/cosimo/perl6-lwp-simple
+# or included in Rakudo * distributions
+use LWP::Simple;
 
-has Str $.url is rw;
+has Str $.host is rw;
 has Array $.json_methods is rw;
 
-submethod BUILD ( Str $url, Array $json_methods = [] ) {
-    $.url = $url;
+submethod BUILD ( Str $host, Array $json_methods = [] ) {
+    $.host = $host;
 
     # this is workaround for not yet implemented CANDO in Rakudo
     for $json_methods.values -> $json_method {
@@ -25,40 +27,35 @@ submethod BUILD ( Str $url, Array $json_methods = [] ) {
         $role.^compose( );
         self does $role;
     }
+
 }
 
 method !request( Str $json_method, Array $json_params = [ ] ) {
+
+    # generate random id to identify remote procedure call and response
     my $json_id = ( 'a' .. 'z', 'A' .. 'Z', 0 .. 9 ).roll( 32 ).join;
 
+    # attach information about content type
+    my %headers = ( 'Content-Type' => 'application/json' );
+
+    # build JSON-RPC top object
     my $request = {
         'method' => $json_method,
         'params' => $json_params,
         'id'     => $json_id,
     };
-    my $json_request = to-json( $request );
+    my $content = to-json( $request );
 
-    my $http_request = "POST / HTTP/1.1\r\n";
-    $http_request ~= sprintf "Host: %s\r\n", $.url;
-    $http_request ~= sprintf "Content-Length: %d\r\n", $json_request.bytes;
-    $http_request ~= "Content-Type: application/json\r\n";
-    $http_request ~= "\r\n";
-    $http_request ~= $json_request;
+    # call remote host
+    my $http_response = LWP::Simple.get( $.host, %headers, $content );
 
-    my $socket = IO::Socket::INET.new;
-    $socket.open( $.url, 80 );
-    $socket.send( $http_request );
-    my $http_response = $socket.recv( );
-    $socket.close( );
-
-    HTTP::Response::Grammar.parse($http_response);
-
-    unless $/{'status'}{'code'} ~ 200 {
-        # TODO replace with HTTP exception
-        die $/{'status'}{'message'};
+    unless $http_response {
+        # TODO replace with LWP::Simple exception
+        # response code and status line would be awesome....
+        die 'HTTP request failed';
     }
 
-    my $json_response = $/{'content'};
-    my $response = from-json( $json_response );
+    my $response = from-json( $http_response );
     # TODO decoding exception
 
     if $response{'error'} {

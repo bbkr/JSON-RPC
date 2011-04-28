@@ -15,13 +15,13 @@ http://dev.getresponse.com/api-doc/
     use JSON::RPC::Client
     
     my $client = JSON::RPC::Client.new(
-        url             => 'api2.getresponse.com',
+        host            => 'http://api2.getresponse.com',
         json_methods    => [ 'ping', 'get_campaigns' ],
     );
     
     my $response = $client.ping( 'MY_API_KEY' ); # { "ping" => "pong" }
 
-Where
+Whereś
 
 * url - is the URL of the service
 * json_methods - methods that will be installed in client class,
@@ -32,21 +32,23 @@ SERVER
 
 Not yet implemented.
 
+CHANGELOG
+
+0.1 Working proof-of-concept
+0.2 Switched transport layer LWP::Simple
+    Added live tests
+    Added META.info
 
 TODO
 
 * HTTP and JSON exceptions
-* URL parsing and path support
 * GET/POST selection
-* port selection
 * Server
-* tests
-  (once Server is ready, to avoid online tests)
-
 
 THANKS
 
 Special thanks to Moritz and Masak for help on #perl6
+and to cosimo for reviewing pull requests on GitHub.
 
 
 CONTACT
