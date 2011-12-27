@@ -6,11 +6,64 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXFileReference section */
+		810601B314AA806A00E17399 /* Client.pm */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = Client.pm; sourceTree = "<group>"; };
+		810601B514AA806A00E17399 /* logo_32x32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo_32x32.png; sourceTree = "<group>"; };
+		810601B714AA806A00E17399 /* client.t */ = {isa = PBXFileReference; lastKnownFileType = text; path = client.t; sourceTree = "<group>"; };
+		810601B814AA806A00E17399 /* META.info */ = {isa = PBXFileReference; lastKnownFileType = text; path = META.info; sourceTree = "<group>"; };
+		810601B914AA806A00E17399 /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
 /* Begin PBXGroup section */
 		810601A714AA7E5300E17399 = {
 			isa = PBXGroup;
 			children = (
+				810601B014AA806A00E17399 /* lib */,
+				810601B414AA806A00E17399 /* logotype */,
+				810601B614AA806A00E17399 /* t */,
+				810601B814AA806A00E17399 /* META.info */,
+				810601B914AA806A00E17399 /* README */,
 			);
+			sourceTree = "<group>";
+		};
+		810601B014AA806A00E17399 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				810601B114AA806A00E17399 /* JSON */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		810601B114AA806A00E17399 /* JSON */ = {
+			isa = PBXGroup;
+			children = (
+				810601B214AA806A00E17399 /* RPC */,
+			);
+			path = JSON;
+			sourceTree = "<group>";
+		};
+		810601B214AA806A00E17399 /* RPC */ = {
+			isa = PBXGroup;
+			children = (
+				810601B314AA806A00E17399 /* Client.pm */,
+			);
+			path = RPC;
+			sourceTree = "<group>";
+		};
+		810601B414AA806A00E17399 /* logotype */ = {
+			isa = PBXGroup;
+			children = (
+				810601B514AA806A00E17399 /* logo_32x32.png */,
+			);
+			path = logotype;
+			sourceTree = "<group>";
+		};
+		810601B614AA806A00E17399 /* t */ = {
+			isa = PBXGroup;
+			children = (
+				810601B714AA806A00E17399 /* client.t */,
+			);
+			path = t;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
