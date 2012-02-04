@@ -12,12 +12,17 @@
 		810601B714AA806A00E17399 /* client.t */ = {isa = PBXFileReference; lastKnownFileType = text; path = client.t; sourceTree = "<group>"; };
 		810601B814AA806A00E17399 /* META.info */ = {isa = PBXFileReference; lastKnownFileType = text; path = META.info; sourceTree = "<group>"; };
 		810601B914AA806A00E17399 /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		8111F01714CC345C00E4848B /* Server.pm */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = Server.pm; sourceTree = "<group>"; };
+		813E6FAE14CE0A9800F35FB7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.man; };
+		8150AE3314D09D5B005BAB23 /* Error.pm */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = Error.pm; sourceTree = "<group>"; };
+		8150AE3514D20155005BAB23 /* server.t */ = {isa = PBXFileReference; lastKnownFileType = text; path = server.t; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.perl; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		810601A714AA7E5300E17399 = {
 			isa = PBXGroup;
 			children = (
+				813E6FAE14CE0A9800F35FB7 /* README.md */,
 				810601B014AA806A00E17399 /* lib */,
 				810601B414AA806A00E17399 /* logotype */,
 				810601B614AA806A00E17399 /* t */,
@@ -46,6 +51,8 @@
 			isa = PBXGroup;
 			children = (
 				810601B314AA806A00E17399 /* Client.pm */,
+				8111F01714CC345C00E4848B /* Server.pm */,
+				8150AE3314D09D5B005BAB23 /* Error.pm */,
 			);
 			path = RPC;
 			sourceTree = "<group>";
@@ -62,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				810601B714AA806A00E17399 /* client.t */,
+				8150AE3514D20155005BAB23 /* server.t */,
 			);
 			path = t;
 			sourceTree = "<group>";
@@ -71,6 +79,9 @@
 /* Begin PBXProject section */
 		810601A914AA7E5300E17399 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
 			buildConfigurationList = 810601AC14AA7E5300E17399 /* Build configuration list for PBXProject "JSON RPC" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
