@@ -153,6 +153,7 @@ Every exception has numeric ```code``` attribute that indicates the error type t
 **Server** does all the exception handling automatically. For example if you provide application handler without some method client will receive 'Method not found' error on call to this method. However if you want to report error from method it can be done in two ways.
 
 * End method using die.
+
 ```
     method divide ( Int $x, Int $y ) {
         die 'Cannot divide by 0' if $y ~~ 0;
@@ -162,9 +163,9 @@ Every exception has numeric ```code``` attribute that indicates the error type t
 Client will receive 'Internal error' with message 'Cannot divide by 0' as ```data``` attribute.
 
 * Throw ```JSON::RPC::Error``` exception.
+
 ```
     class My::App {
-    
         method treasure {
             JSON::RPC::Error.new(
                 code => -1,
@@ -172,7 +173,6 @@ Client will receive 'Internal error' with message 'Cannot divide by 0' as ```dat
                 data => 'Thou shall not pass'
             ).throw;
         }
-    
     }
 ```
 
