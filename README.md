@@ -135,7 +135,7 @@ Errors defined in 2.0 spec are represented by ```JSON::RPC::Error``` exceptions:
 
 Every exception has numeric ```code``` attribute that indicates the error type that occurred, text ```message``` attribute that provides a short description of the error and optional ```data``` attribute that contains additional information about the error.
 
-Client can catch those exceptions.
+**Client** can catch those exceptions.
 
     try {
         $c.hello( 'John Doe' );
@@ -150,19 +150,19 @@ Client can catch those exceptions.
         }
     }
 
-Server does all the exception handling automatically. For example if you provide application handler without some method client will receive 'Method not found' error on call to this method. However if you want to report error from method it can be done in two ways.
+**Server** does all the exception handling automatically. For example if you provide application handler without some method client will receive 'Method not found' error on call to this method. However if you want to report error from method it can be done in two ways.
 
 * End method using die.
-    
+```
     method divide ( Int $x, Int $y ) {
         die 'Cannot divide by 0' if $y ~~ 0;
         return $x / $y;
     }
-
+```
 Client will receive 'Internal error' with message 'Cannot divide by 0' as ```data``` attribute.
 
 * Throw ```JSON::RPC::Error``` exception.
-    
+```
     class My::App {
     
         method treasure {
@@ -174,6 +174,7 @@ Client will receive 'Internal error' with message 'Cannot divide by 0' as ```dat
         }
     
     }
+```
 
 Exception ```JSON::RPC::Error``` is composable so you can easily define your own errors.
 
