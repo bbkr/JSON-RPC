@@ -11,7 +11,6 @@
 		810601B514AA806A00E17399 /* logo_32x32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = logo_32x32.png; sourceTree = "<group>"; };
 		810601B714AA806A00E17399 /* client.t */ = {isa = PBXFileReference; lastKnownFileType = text; path = client.t; sourceTree = "<group>"; };
 		810601B814AA806A00E17399 /* META.info */ = {isa = PBXFileReference; lastKnownFileType = text; path = META.info; sourceTree = "<group>"; };
-		810601B914AA806A00E17399 /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		8111F01714CC345C00E4848B /* Server.pm */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = Server.pm; sourceTree = "<group>"; };
 		813E6FAE14CE0A9800F35FB7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.man; };
 		8150AE3314D09D5B005BAB23 /* Error.pm */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = Error.pm; sourceTree = "<group>"; };
@@ -27,7 +26,6 @@
 				810601B414AA806A00E17399 /* logotype */,
 				810601B614AA806A00E17399 /* t */,
 				810601B814AA806A00E17399 /* META.info */,
-				810601B914AA806A00E17399 /* README */,
 			);
 			sourceTree = "<group>";
 		};

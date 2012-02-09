@@ -1,7 +1,7 @@
 {
     "name" : "JSON::RPC",
     "version" : "0.4",
-    "description" : "JSON-RPC client and server",
+    "description" : "JSON-RPC 2.0 client and server",
     "author" : "Pawel Pabian",
     "authority" : "bbkr",
     "depends" : [ "JSON::Tiny" ],

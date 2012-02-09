@@ -1,9 +1,6 @@
 use JSON::Tiny;
 use JSON::RPC::Error;
 
-# JSON-RPC server
-# supporting 2.0 spec http://jsonrpc.org/spec.html
-
 class JSON::RPC::Server;
 
 # debug attributes
@@ -19,28 +16,28 @@ method run ( Str :$host = '', Int :$port = 8080 ) {
     my $listener = IO::Socket::INET.new( localhost => $host, localport => $port, :listen );
 
     say 'Listening on ' ~ $host ~ ':' ~ $port if $.debug;
-    
+
     # new client connected
     while my $connection = $listener.accept( ) {
 
         # process status line
         my ( $method, $uri, $protocol ) = $connection.get( ).comb( /\S+/ );
-        
+
         my $body;
         loop {
             my $line = $connection.get( );
-            
+
             # line that ends header section
             last if $line ~~ "\x0D";
-            
+
             # for now another headers are ignored
             # they will be parsed properly after switch to HTTP::Transport
             next unless $line ~~ m:i/^ 'Content-Length:' <ws> (\d+) /;
-            
+
             # store body length
             $body = $/[0];
         }
-        
+
         # RFC 2616
         # For compatibility with HTTP/1.0 applications, HTTP/1.1 requests
         # containing a message-body MUST include a valid Content-Length header
@@ -48,20 +45,20 @@ method run ( Str :$host = '', Int :$port = 8080 ) {
         # request contains a message-body and a Content-Length is not given,
         # the server SHOULD respond with 400 (bad request) if it cannot
         # determine the length of the message...
-        
+
         unless $body {
             my $response = $protocol ~ ' 400 Bad Request' ~ "\x0D\x0A" ~ "\x0D\x0A";
             $connection.send( $response );
             $connection.close( );
             next;
         }
-        
+
         # receive message body 
         $body = $connection.read( $body ).decode( );
 
         # dispatch remote procedure call
         my $response = self.handler( json => $body );
-        
+
         # wrap response in HTTP Response
         $response = $protocol ~ ' 200 OK' ~ "\x0D\x0A"
             ~ 'Content-Type: application/json' ~ "\x0D\x0A"
@@ -71,13 +68,12 @@ method run ( Str :$host = '', Int :$port = 8080 ) {
 
         # send response to client
         $connection.send( $response );
-        
+
         # close connection with client, no keep-alive yet
         $connection.close( );   
     }
-    
-}
 
+}
 
 method handler ( Str :$json! ) {
 
@@ -134,9 +130,7 @@ method handler ( Str :$json! ) {
     # in debug mode save last generated response
     %.history = %response if $.debug;
 
-    my $response = to-json( %response );
-    
-    return $response;
+    return to-json( %response );
 }
 
 method parse_json ( Str $body ) {
@@ -165,7 +159,7 @@ multi method validate_request (
     # during the invocation of the method. This member MAY be omitted.
     # (explained in "4.2 Parameter Structures")
     :$params? where {
-        # as explained in RT 109182 lack of presence cannot be tested in signature
+        # INFO: as explained in RT 109182 lack of presence cannot be tested in signature
         # so "params":null is incorrectly assumed to be to be valid -
         # this is not dangerous because both lack of params or params equals Any()
         # are dispatched to empty signature later

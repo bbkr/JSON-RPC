@@ -1,32 +1,42 @@
 # JSON-RPC client and server
 
-Implements [spec](http://jsonrpc.org/spec.html "2.0 specification").
+Supports [spec](http://jsonrpc.org/spec.html "2.0 specification").
 
-
-## VERSION
-
-This module is compatible with Rakudo Star 2012.01+.
-
+Compatible with Rakudo Star 2012.01+.
 
 ## CLIENT
 
-Work in progress
+    use JSON::RPC::Client;
+    
+    # create new client with url to server
+    my $c = JSON::RPC::Client.new( url => 'http://localhost:8080' );
+    
+    # method without params    
+    say $c.ping;
+    
+    # method with positional params
+    say $c.hi( 'John Doe' );
+    
+    # method with named params
+    say $c.hello( name => 'John Doe' );
 
 
 ## SERVER
 
-Define application class that will handle remote procedure calls.
+    use JSON::RPC::Server;
 
+    # define application class
+    # that will handle remote procedure calls
     class My::App {
     
-        # method without arguments
-        method ping  { return 'pong' }
+        # method without params
+        method ping { return 'pong' }
     
-        # method with positional arguments
-        method welcome ( Str $name! ) { return 'Hi ' ~ $name }
+        # method with positional params
+        method hi ( Str $name! ) { return 'Hi ' ~ $name }
 
-        # method with named arguments
-        method welcome ( Str :$name! ) { return 'Hi ' ~ $name }
+        # method with named params
+        method hello ( Str :$name! ) { return 'Hello ' ~ $name }
     
         # multi method with different signatures
         multi method offer ( Int $age where { $age < 8 } ) {
@@ -38,17 +48,19 @@ Define application class that will handle remote procedure calls.
     
     }
 
-Start server with your application as handler.
-
+    # start server with your application as handler
     JSON::RPC::Server.new( application => My::App ).run;
 
-Your server is now available at http://localhost:8080 .
+Your server is now available at *http://localhost:8080*.
 
-Jump to advanced stuff below if you like...
+## ADVANCED STUFF
 
-### Application
+Examples above _make easy things easy_.
+Now it is time to make _hard things possible_.
 
-* You can provide class name or object instance. Using class name results in static dispatch while using object instance allows you to initialize attributes in your class.
+### Should I use class name vs object instance as server handler?
+
+You can use both. Using class name results in static dispatch while using object instance allows you to initialize attributes in your class.
 
     class My::App {
     
@@ -67,13 +79,18 @@ Jump to advanced stuff below if you like...
     # BEGIN is called
     JSON::RPC::Server.new( application => My::App.new ).run;
 
-* Declare methods as private if you do not wish server to dispatch to them.
+
+### How can method be excluded from server handler dispatch?
+
+Declare it as private.
 
     method !get_database_info ( ) {
         return 'username', 'password';
     }
 
-* Validate params in signatures instead of method bodies. This way server correctly returns 'Invalid params' error and method is not called if signature does not match - you can easily separate validation from logic.
+### Should I declare signatures for server handler methods?
+
+It is recommended that you validate params in signatures instead of method bodies. This way server correctly returns 'Invalid params' error (more info later) and method is not called if signature does not match - you can easily separate validation from logic.
 
     method add_programmer (
         Str :$name!,
@@ -86,20 +103,24 @@ Jump to advanced stuff below if you like...
         $!db.insert( $name, $age, $experience );
     }
 
-* When request can be dispatched to more than one multi method then first candidate in definition order is chosen.
+### What will happen when more than one server handler candidate matches?
 
-## ERRORS
+When request can be dispatched to more than one multi method then first candidate in definition order is chosen. This is not an error.
+
+### Can I bind server to other port that 8080?
+
+Use port param.
+
+    JSON::RPC::Server.new( port => 9999 ...
+
+### Error handling
 
 Server supports errors defined in 2.0 spec.
 
 * Parse error - Invalid JSON was received by the server.
-
 * Invalid Request - The JSON sent is not a valid Request object.
-
 * Method not found - The method does not exist in your application.
-
 * Invalid params - Invalid method parameters, no candidates with matching signature found.
-
 * Internal error - Your method died. Catched message is returned as 'data' explanation field in Error object.
 
     method divide ( Int $x, Int $y ) {
@@ -125,11 +146,9 @@ Server supports errors defined in 2.0 spec.
 
 ## TODO
 
-* Client
 * Notification support in server
-* Support for older spec versions
+* 1.0 spec support
 * Better documentation for RPC::Error namespace
-* Better documentation for positional vs. named params
 
 ## CONTACT
 

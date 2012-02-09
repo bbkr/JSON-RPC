@@ -1,4 +1,5 @@
 # JSON-PRC 2.0 spec defines Error Object in chapter 5.1
+# derived from http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
 
 role JSON::RPC::Error is Exception {
 
@@ -42,24 +43,31 @@ class JSON::RPC::ParseError does JSON::RPC::Error {
 
 # The JSON sent is not a valid Request object.
 class JSON::RPC::InvalidRequest does JSON::RPC::Error {
-    
+
     submethod BUILD ( $!code = -32600, $!message = 'Invalid Request', :$!data ) { }
 }
 
 # The method does not exist / is not available.
 class JSON::RPC::MethodNotFound does JSON::RPC::Error {
-    
+
     submethod BUILD ( $!code = -32601, $!message = 'Method not found', :$!data ) { }
 }
 
 # Invalid method parameter(s).
 class JSON::RPC::InvalidParams does JSON::RPC::Error {
-    
+
     submethod BUILD ( $!code = -32602, $!message = 'Invalid params', :$!data ) { }
 }
 
 # Internal JSON-RPC error.
 class JSON::RPC::InternalError does JSON::RPC::Error {
-    
+
     submethod BUILD ( $!code = -32603, $!message = 'Internal error', :$!data ) { }
 }
+
+# Transport error.
+class JSON::RPC::TransportError does JSON::RPC::Error {
+
+    submethod BUILD ( $!code = -32300, $!message = 'Transport error', :$!data ) { }
+}
+

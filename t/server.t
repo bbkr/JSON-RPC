@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift('lib') }
 use Test;
 use JSON::RPC::Server;
 
-plan( 50 );
+plan( 51 );
 
 class CustomError does JSON::RPC::Error {
     submethod BUILD (
@@ -28,6 +28,8 @@ class Application {
 }
 
 my $rpc = JSON::RPC::Server.new( application => Application, :debug );
+
+isa_ok $rpc, JSON::RPC::Server;
 
 # test JSON::RPC::ParseError exception
 {
