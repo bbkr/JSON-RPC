@@ -1,8 +1,8 @@
 # JSON-RPC client and server
 
-Supports [spec](http://jsonrpc.org/spec.html "2.0 specification").
+Supports [2.0 specification](http://jsonrpc.org/spec.html).
 
-Compatible with Rakudo Star 2012.01+.
+Compatible with Perl 6 [Rakudo Star](http://rakudo.org/) 2012.01+.
 
 ## CLIENT
 
@@ -56,9 +56,24 @@ Your server is now available at *http://localhost:8080*.
 ## ADVANCED STUFF
 
 Examples above _make easy things easy_.
+
 Now it is time to make _hard things possible_.
 
-### Should I use class name vs object instance as server handler?
+### Protocol versions
+
+There are 3 specs of JSON-RPC published:
+
+* [1.0](http://json-rpc.org/wiki/specification) - Vanilla spec support is on TODO list.
+* [1.1](http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html) - This one is unlikely to be supported as it is not popular and requires complex two-level error handlers.
+* [2.0](http://jsonrpc.org/spec.html) - This one is almost fully supported, notifications and batches are on TODO list.
+
+### Can I bind server to other port that 8080?
+
+Use port param.
+
+    JSON::RPC::Server.new( port => 9999 ...
+
+### Should I use class name or object instance as server handler?
 
 You can use both. Using class name results in static dispatch while using object instance allows you to initialize attributes in your class.
 
@@ -107,28 +122,62 @@ It is recommended that you validate params in signatures instead of method bodie
 
 When request can be dispatched to more than one multi method then first candidate in definition order is chosen. This is not an error.
 
-### Can I bind server to other port that 8080?
-
-Use port param.
-
-    JSON::RPC::Server.new( port => 9999 ...
-
 ### Error handling
 
-Server supports errors defined in 2.0 spec.
+Errors defined in 2.0 spec are represented by ```JSON::RPC::Error``` exceptions:
 
-* Parse error - Invalid JSON was received by the server.
-* Invalid Request - The JSON sent is not a valid Request object.
-* Method not found - The method does not exist in your application.
-* Invalid params - Invalid method parameters, no candidates with matching signature found.
-* Internal error - Your method died. Catched message is returned as 'data' explanation field in Error object.
+* ```JSON::RPC::ParseError``` - Invalid JSON was received by the server.
+* ```JSON::RPC::InvalidRequest``` - The structure sent by client is not a valid Request object.
+* ```JSON::RPC::MethodNotFound``` - The method does not exist in server handler application.
+* ```JSON::RPC::InvalidParams``` - Invalid method parameters, no handler candidates with matching signature found.
+* ```JSON::RPC::InternalError``` - Remote method died.
+* ```JSON::RPC::TransportError``` - Client specific error that may happen on transport layer.
+
+Every exception has numeric ```code``` attribute that indicates the error type that occurred, text ```message``` attribute that provides a short description of the error and optional ```data``` attribute that contains additional information about the error.
+
+Client can catch those exceptions.
+
+    try {
+        $c.hello( 'John Doe' );
+        CATCH {
+            when JSON::RPC::MethodNotFound {
+                say 'Server is rude';
+            }
+            default {
+                # stringified exception is in human-readable form
+                say ~$_;
+            }
+        }
+    }
+
+Server does all the exception handling automatically. For example if you provide application handler without some method client will receive 'Method not found' error on call to this method.
+
+However if you want to report error from method it can be done in two ways.
+
+* End method using die.
 
     method divide ( Int $x, Int $y ) {
         die 'Cannot divide by 0' if $y ~~ 0;
         return $x / $y;
     }
 
-* Custom error can be defined by composing JSON::RPC::Error exception. It is throwable.
+Client will receive 'Internal error' with message 'Cannot divide by 0' as ```data``` attribute.
+
+* Throw ```JSON::RPC::Error``` exception.
+
+    class My::App {
+    
+        method treasure {
+            JSON::RPC::Error.new(
+                code => -1,
+                message => 'Access denied',
+                data => 'Thou shall not pass'
+            ).throw;
+        }
+    
+    }
+
+Exception ```JSON::RPC::Error``` is composable so you can easily define your own errors.
 
     class My::Error does JSON::RPC::Error {
         submethod BUILD (
@@ -137,18 +186,19 @@ Server supports errors defined in 2.0 spec.
             $!data = 'Thou shall not pass'
         ) {}
     }
-    
-    class My::App {
-    
-        method treasure { My::Error.new.throw }
-    
+
+And use them in application handler.
+
+    method treasure {
+        MyError.new.throw;
     }
 
 ## TODO
 
-* Notification support in server
-* 1.0 spec support
-* Better documentation for RPC::Error namespace
+* Notifications.
+* Batches.
+* Spec 1.0 support.
+* Move to dedicated HTTP transport modules when available.
 
 ## CONTACT
 
