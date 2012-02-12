@@ -21,16 +21,21 @@ role JSON::RPC::Error is Exception {
 
     # Stringify output for debug purposes.
     method Str {
-        return  $.message ~ ' (' ~ $.code ~ '): ' ~ $.data.perl;
+		my $error = $.message ~ ' (' ~ $.code ~ ')';
+		$error ~= ': ' ~ $.data.perl if $.data.defined;
+
+		return $error;
     }
 
     # Make response error member for serving purposes.
     method Hash {
-        return {
+		my %error = (
             'code' => $.code,
             'message' => $.message,
-            'data' => $.data
-        };
+        );
+		%error{'data'} = $.data if $.data.defined;
+
+		return %error;
     }
 }
 
