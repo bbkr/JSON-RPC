@@ -69,9 +69,9 @@ There are 3 specs of JSON-RPC published:
 
 ### Can I bind server to other port that 8080?
 
-Use port param.
+Use port param in `run()` method.
 
-    JSON::RPC::Server.new( port => 9999 ...
+    .run( port => 9999 );
 
 ### Should I use class name or object instance as server handler?
 
@@ -124,16 +124,16 @@ When request can be dispatched to more than one multi method then first candidat
 
 ### Error handling
 
-Errors defined in 2.0 spec are represented by ```JSON::RPC::Error``` exceptions:
+Errors defined in 2.0 spec are represented by `JSON::RPC::Error` exceptions:
 
-* ```JSON::RPC::ParseError``` - Invalid JSON was received by the server.
-* ```JSON::RPC::InvalidRequest``` - The structure sent by client is not a valid Request object.
-* ```JSON::RPC::MethodNotFound``` - The method does not exist in server handler application.
-* ```JSON::RPC::InvalidParams``` - Invalid method parameters, no handler candidates with matching signature found.
-* ```JSON::RPC::InternalError``` - Remote method died.
-* ```JSON::RPC::TransportError``` - Client specific error that may happen on transport layer.
+* `JSON::RPC::ParseError` - Invalid JSON was received by the server.
+* `JSON::RPC::InvalidRequest` - The structure sent by client is not a valid Request object.
+* `JSON::RPC::MethodNotFound` - The method does not exist in server handler application.
+* `JSON::RPC::InvalidParams` - Invalid method parameters, no handler candidates with matching signature found.
+* `JSON::RPC::InternalError` - Remote method died.
+* `JSON::RPC::TransportError` - Client specific error that may happen on transport layer.
 
-Every exception has numeric ```code``` attribute that indicates the error type that occurred, text ```message``` attribute that provides a short description of the error and optional ```data``` attribute that contains additional information about the error.
+Every exception has numeric `code` attribute that indicates the error type that occurred, text `message` attribute that provides a short description of the error and optional `data` attribute that contains additional information about the error.
 
 **Client** can catch those exceptions.
 
@@ -154,17 +154,15 @@ Every exception has numeric ```code``` attribute that indicates the error type t
 
 * End method using die.
 
-```
     method divide ( Int $x, Int $y ) {
         die 'Cannot divide by 0' if $y ~~ 0;
         return $x / $y;
     }
-```
-Client will receive 'Internal error' with message 'Cannot divide by 0' as ```data``` attribute.
 
-* Throw ```JSON::RPC::Error``` exception.
+Client will receive 'Internal error' with message 'Cannot divide by 0' as `data` attribute.
 
-```
+* Throw `JSON::RPC::Error` exception.
+
     class My::App {
         method treasure {
             JSON::RPC::Error.new(
@@ -174,16 +172,13 @@ Client will receive 'Internal error' with message 'Cannot divide by 0' as ```dat
             ).throw;
         }
     }
-```
 
-Exception ```JSON::RPC::Error``` is composable so you can easily define your own errors.
+Exception `JSON::RPC::Error` is composable so you can easily define your own errors.
 
     class My::Error does JSON::RPC::Error {
-        submethod BUILD (
-            $!code = -1,
-            $!message = 'Access denied',
-            $!data = 'Thou shall not pass'
-        ) {}
+        method new {
+            self.bless( *, code => -1, message => "Access denied", data => "Thou shall not pass" );
+        }
     }
 
 And use them in application handler.

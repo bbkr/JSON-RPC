@@ -41,7 +41,7 @@ submethod BUILD ( :$url! ) {
     # parse URL
     # for now this is just placeholder
     # it will be parsed properly after switch to URI
-    $.url = $url ~~ /
+    $!url = $url ~~ /
         "http://"
         $<host>=( [\w|"."|"-"]+ )
         [ ":" $<port>=( \d+ ) ]?

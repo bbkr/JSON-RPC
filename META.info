@@ -1,6 +1,6 @@
 {
     "name" : "JSON::RPC",
-    "version" : "0.4",
+    "version" : "0.5",
     "description" : "JSON-RPC 2.0 client and server",
     "author" : "Pawel Pabian",
     "authority" : "bbkr",

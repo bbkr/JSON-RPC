@@ -8,19 +8,19 @@ role JSON::RPC::Error is Exception {
     # with a value that is a Object with the following members:
 
     # A Number that indicates the error type that occurred.
-    #This MUST be an integer.
-    has Int $.code;
+    # This MUST be an integer.
+    has Int $.code is rw;
 
     # A String providing a short description of the error.
     # The message SHOULD be limited to a concise single sentence.
-    has Str $.message;
+    has Str $.message is rw;
 
     # A Primitive or Structured value that contains additional information about the error.
     # This may be omitted.
     has Any $.data is rw;
 
     # Stringify output for debug purposes.
-    method Str {
+    method Str ( ) {
 		my $error = $.message ~ ' (' ~ $.code ~ ')';
 		$error ~= ': ' ~ $.data.perl if $.data.defined;
 
@@ -37,42 +37,65 @@ role JSON::RPC::Error is Exception {
 
 		return %error;
     }
+
+    # Make gist output for console printing purposes
+    method gist ( ) {
+        return self.Str;
+    }
+
 }
 
 # Invalid JSON was received by the server.
 # An error occurred on the server while parsing the JSON text.
 class JSON::RPC::ParseError does JSON::RPC::Error {
 
-    submethod BUILD ( $!code = -32700, $!message = 'Parse error', :$!data ) { }
+    method new ( :$data ) {
+        self.bless( *, code => -32700, message => 'Parse error', data => $data );
+    }
+
 }
 
 # The JSON sent is not a valid Request object.
 class JSON::RPC::InvalidRequest does JSON::RPC::Error {
 
-    submethod BUILD ( $!code = -32600, $!message = 'Invalid Request', :$!data ) { }
+    method new ( :$data ) {
+        self.bless( *, code => -32600, message => 'Invalid Request', data => $data );
+    }
+
 }
 
 # The method does not exist / is not available.
 class JSON::RPC::MethodNotFound does JSON::RPC::Error {
 
-    submethod BUILD ( $!code = -32601, $!message = 'Method not found', :$!data ) { }
+    method new ( :$data ) {
+        self.bless( *, code => -32601, message => 'Method not found', data => $data );
+    }
+
 }
 
 # Invalid method parameter(s).
 class JSON::RPC::InvalidParams does JSON::RPC::Error {
 
-    submethod BUILD ( $!code = -32602, $!message = 'Invalid params', :$!data ) { }
+    method new ( :$data ) {
+        self.bless( *, code => -32602, message => 'Invalid params', data => $data );
+    }
+
 }
 
 # Internal JSON-RPC error.
 class JSON::RPC::InternalError does JSON::RPC::Error {
 
-    submethod BUILD ( $!code = -32603, $!message = 'Internal error', :$!data ) { }
+    method new ( :$data ) {
+        self.bless( *, code => -32603, message => 'Internal error', data => $data );
+    }
+
 }
 
 # Transport error.
 class JSON::RPC::TransportError does JSON::RPC::Error {
 
-    submethod BUILD ( $!code = -32300, $!message = 'Transport error', :$!data ) { }
-}
+    method new ( :$data ) {
+        self.bless( *, code => -32300, message => 'Transport error', data => $data );
+    }
 
+}

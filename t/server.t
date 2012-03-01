@@ -6,11 +6,9 @@ use JSON::RPC::Server;
 plan( 51 );
 
 class CustomError does JSON::RPC::Error {
-    submethod BUILD (
-        $!code = -1,
-        $!message = "GLaDOS",
-        $!data = "The cake was a lie."
-    ) {}
+    method new {
+        self.bless( *, code => -1, message => "GLaDOS", data => "The cake was a lie." );
+    }
 }
 
 class Application {
