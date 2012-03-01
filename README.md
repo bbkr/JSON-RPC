@@ -6,23 +6,25 @@ Compatible with Perl 6 [Rakudo Star](http://rakudo.org/) 2012.01+.
 
 ## CLIENT
 
-    use JSON::RPC::Client;
-    
-    # create new client with url to server
-    my $c = JSON::RPC::Client.new( url => 'http://localhost:8080' );
-    
-    # method without params    
-    say $c.ping;
-    
-    # method with positional params
-    say $c.hi( 'John Doe' );
-    
-    # method with named params
-    say $c.hello( name => 'John Doe' );
-
+```perl
+   use JSON::RPC::Client;
+   
+   # create new client with url to server
+   my $c = JSON::RPC::Client.new( url => 'http://localhost:8080' );
+   
+   # method without params    
+   say $c.ping;
+   
+   # method with positional params
+   say $c.hi( 'John Doe' );
+   
+   # method with named params
+   say $c.hello( name => 'John Doe' );
+```
 
 ## SERVER
 
+```perl
     use JSON::RPC::Server;
 
     # define application class
@@ -50,14 +52,13 @@ Compatible with Perl 6 [Rakudo Star](http://rakudo.org/) 2012.01+.
 
     # start server with your application as handler
     JSON::RPC::Server.new( application => My::App ).run;
+```
 
-Your server is now available at *http://localhost:8080*.
+Your server is now available at [http://localhost:8080](http://localhost:8080).
 
 ## ADVANCED STUFF
 
-Examples above _make easy things easy_.
-
-Now it is time to make _hard things possible_.
+Examples above _make easy things easy_, now it is time to make _hard things possible_.
 
 ### Protocol versions
 
@@ -71,16 +72,19 @@ There are 3 specs of JSON-RPC published:
 
 Use port param in `run()` method.
 
+```perl
     .run( port => 9999 );
+```
 
 ### Should I use class name or object instance as server handler?
 
 You can use both. Using class name results in static dispatch while using object instance allows you to initialize attributes in your class.
 
+```perl
     class My::App {
     
         has $!db;
-        submethod BEGIN { $!db = ... # connect to database  }
+        submethod BEGIN { $!db = ... }  # connect to database
     
         method ping ( ) { return 'pong' }
     
@@ -89,24 +93,25 @@ You can use both. Using class name results in static dispatch while using object
     # BEGIN is not called
     JSON::RPC::Server.new( application => My::App ).run;
     
-    # or..
-    
     # BEGIN is called
     JSON::RPC::Server.new( application => My::App.new ).run;
-
+```
 
 ### How can method be excluded from server handler dispatch?
 
 Declare it as private.
 
+```perl
     method !get_database_info ( ) {
         return 'username', 'password';
     }
+```
 
 ### Should I declare signatures for server handler methods?
 
-It is recommended that you validate params in signatures instead of method bodies. This way server correctly returns 'Invalid params' error (more info later) and method is not called if signature does not match - you can easily separate validation from logic.
+It is recommended that you validate params in signatures instead of method bodies. This way server correctly returns "Invalid params" error (more info later) and method is not called if signature does not match - you can easily separate validation from logic.
 
+```perl
     method add_programmer (
         Str :$name!,
         Int :$age! where { $age >= 0 },
@@ -117,8 +122,9 @@ It is recommended that you validate params in signatures instead of method bodie
         # negative age or experience exceeding age shall not pass
         $!db.insert( $name, $age, $experience );
     }
+```
 
-### What will happen when more than one server handler candidate matches?
+### What happens when more than one server handler candidate matches?
 
 When request can be dispatched to more than one multi method then first candidate in definition order is chosen. This is not an error.
 
@@ -137,6 +143,7 @@ Every exception has numeric `code` attribute that indicates the error type that 
 
 **Client** can catch those exceptions.
 
+```perl
     try {
         $c.hello( 'John Doe' );
         CATCH {
@@ -149,43 +156,48 @@ Every exception has numeric `code` attribute that indicates the error type that 
             }
         }
     }
+```
 
-**Server** does all the exception handling automatically. For example if you provide application handler without some method client will receive 'Method not found' error on call to this method. However if you want to report error from method it can be done in two ways.
+**Server** does all the exception handling automatically. For example if you provide application handler without some method client will receive "Method not found" error on call to this method. However if you want to report error from method it can be done in two ways.
 
 * End method using die.
 
-    method divide ( Int $x, Int $y ) {
-        die 'Cannot divide by 0' if $y ~~ 0;
-        return $x / $y;
-    }
+```perl
+	method divide ( Int $x, Int $y ) {
+	    die 'Cannot divide by 0' if $y ~~ 0;
+	    return $x / $y;
+	}
+```
 
-Client will receive 'Internal error' with message 'Cannot divide by 0' as `data` attribute.
+Client will receive `message` attribute 'Internal error' with explanation "Cannot divide by 0" as `data` attribute.
 
 * Throw `JSON::RPC::Error` exception.
 
-    class My::App {
-        method treasure {
-            JSON::RPC::Error.new(
-                code => -1,
-                message => 'Access denied',
-                data => 'Thou shall not pass'
-            ).throw;
-        }
-    }
+```perl
+	class My::App {
+	    method treasure {
+	        JSON::RPC::Error.new( code => -1, message => 'Access denied', data => 'Thou shall not pass' ).throw;
+	    }
+	}
+```
 
 Exception `JSON::RPC::Error` is composable so you can easily define your own errors.
 
+```perl
     class My::Error does JSON::RPC::Error {
         method new {
             self.bless( *, code => -1, message => "Access denied", data => "Thou shall not pass" );
         }
     }
+```
 
 And use them in application handler.
 
+```perl
     method treasure {
         My::Error.new.throw;
     }
+```
 
 ## TODO
 
@@ -194,7 +206,13 @@ And use them in application handler.
 * Spec 1.0 support.
 * Move to dedicated HTTP transport modules when available.
 
+##CHANGELOG
+
+* 0.3 - compatibility fixes for Rakudo Star 2012.02
+* 0.2 - working server, compatibility fixes for Rakudo NOM
+* 0.1 - working client with 1.0 spec support
+
 ## CONTACT
 
 You can find me (and many awesome people who helped me to develop this module)
-on irc.freenode.net #perl6 channel as __bbkr__.
+on irc.freenode.net #perl6 channel as **bbkr**.
