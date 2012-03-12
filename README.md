@@ -212,6 +212,10 @@ And use them in application handler.
 * 0.2 - working server, compatibility fixes for Rakudo NOM
 * 0.1 - working client with 1.0 spec support
 
+##LICENSE
+
+Released under [Artistic License 2.0](http://www.perlfoundation.org/artistic_license_2_0).
+
 ## CONTACT
 
 You can find me (and many awesome people who helped me to develop this module)
