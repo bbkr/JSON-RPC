@@ -3,20 +3,18 @@ BEGIN { @*INC.unshift('lib') }
 use Test;
 use JSON::RPC::Client;
 
-plan( 2 );
+plan( 5 );
 
-my $rpc = JSON::RPC::Client.new( url => 'http://rakudo.org' );
-
-isa_ok $rpc, JSON::RPC::Client;
-
+# construction
+dies_ok { JSON::RPC::Client.new( url => 'http:///X##y' ) }, 'cannot initialize using incorrect URL';
+lives_ok { JSON::RPC::Client.new( url => 'http://rakudo.org' ) }, 'can initialize using correct URL';
+lives_ok { JSON::RPC::Client.new( uri => URI.new('http://rakudo.org') ) }, 'can initialize using URI object';
 
 # since forks or threads are not yet implemented
 # it is impossible to safely test Client against Server
 
-# however "need is the mother of all creation" and so
-# live environment can be faked by calling raw json files on GitHub
-# and pretend those are remote procedure responses :)
-
+my $rpc = JSON::RPC::Client.new( url => 'http://rakudo.org' );
+isa_ok $rpc, JSON::RPC::Client;
 
 # test JSON::RPC::Transport exception
 {
@@ -25,4 +23,4 @@ isa_ok $rpc, JSON::RPC::Client;
     }, 'call failed on not JSON content';
 }
 
-# ... more tests soon ...
+# more tests will follow

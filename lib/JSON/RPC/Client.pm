@@ -1,9 +1,10 @@
+use URI;
 use JSON::Tiny;
 use JSON::RPC::Error;
 
 class JSON::RPC::Client;
 
-has Match $.url is rw;
+has URI $.uri is rw = die 'URI is missing';
 
 INIT {
 
@@ -36,16 +37,14 @@ INIT {
     
 }
 
-submethod BUILD ( :$url! ) {
+multi submethod BUILD ( URI :$uri! ) {
 
-    # parse URL
-    # for now this is just placeholder
-    # it will be parsed properly after switch to URI
-    $!url = $url ~~ /
-        "http://"
-        $<host>=( [\w|"."|"-"]+ )
-        [ ":" $<port>=( \d+ ) ]?
-    /;
+    $!uri = $uri;
+}
+
+multi submethod BUILD ( Str :$url! ) {
+
+    $!uri = URI.new( $url, :is_validating );
 }
 
 method handler( Str :$method!, :$params ) {
@@ -71,7 +70,7 @@ method handler( Str :$method!, :$params ) {
 
     # wrap request in HTTP Request
     my $request = to-json( %request );
-    $request = 'POST ' ~ $.url ~ ' HTTP/1.0' ~ "\x0D\x0A"
+    $request = 'POST ' ~ $.uri.Str ~ ' HTTP/1.0' ~ "\x0D\x0A"
         ~ 'Content-Type: application/json' ~ "\x0D\x0A"
         ~ 'Content-Length: ' ~ $request.bytes ~ "\x0D\x0A"
         ~ "\x0D\x0A"
@@ -79,7 +78,7 @@ method handler( Str :$method!, :$params ) {
 
     # make new connection to server
     # no keep-alive yet
-    my $connection = IO::Socket::INET.new( host => ~$.url{'host'}, port => +($.url{'port'}[0] // 80) );
+    my $connection = IO::Socket::INET.new( host => $.uri.host, port => $.uri.port );
 
     # send request to server
     $connection.send( $request);

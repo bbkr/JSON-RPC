@@ -70,7 +70,15 @@ There are 4 specs of JSON-RPC published so far:
 * [1.2](http://jsonrpc.org/historical/jsonrpc12_proposal.html) - Proposal of 2.0 (see below).
 * [2.0](http://www.jsonrpc.org/specification) - Almost fully implemented. Notifications and batches are on TODO list.
 
-### Can I bind server to other port that 8080?
+### Can I use URI object to initialize client
+
+Use uri param in constructor.
+
+```perl
+	JSON::RPC::Client.new( uri => URI.new( 'http://localhost:8080' ) );
+```
+
+### Can I bind server to port other than 8080?
 
 Use port param in `run()` method.
 
