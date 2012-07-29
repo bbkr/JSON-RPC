@@ -1,6 +1,6 @@
 # JSON-RPC client and server
 
-Supports [2.0 specification](http://jsonrpc.org/spec.html).
+Supports [2.0 specification](http://www.jsonrpc.org/specification).
 
 Compatible with Perl 6 [Rakudo](http://rakudo.org/) 2012.01+,
 included in Rakudo Star 2012.04+.
@@ -63,11 +63,12 @@ Examples above _make easy things easy_, now it is time to make _hard things poss
 
 ### Protocol versions
 
-There are 3 specs of JSON-RPC published:
+There are 4 specs of JSON-RPC published so far:
 
-* [1.0](http://json-rpc.org/wiki/specification) - Vanilla spec support is on TODO list.
-* [1.1](http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html) - This one is unlikely to be supported as it is not popular and requires complex two-level error handlers.
-* [2.0](http://jsonrpc.org/spec.html) - This one is almost fully supported, notifications and batches are on TODO list.
+* [1.0](http://json-rpc.org/wiki/specification) - Not implemented. Does not support named params, error objects or batch requests and has different way of handling notifications compared to current spec. It is rarely used nowadays and because of that there are no plans to implement it, however contributions are welcome if someone wants to add backward compatibility.
+* [1.1](http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html) - Rejected. This working draft forces error reporting through HTTP codes making whole communication transport-dependent.
+* [1.2](http://jsonrpc.org/historical/jsonrpc12_proposal.html) - Proposal of 2.0 (see below).
+* [2.0](http://www.jsonrpc.org/specification) - Almost fully implemented. Notifications and batches are on TODO list.
 
 ### Can I bind server to other port that 8080?
 
