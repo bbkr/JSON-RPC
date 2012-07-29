@@ -201,14 +201,6 @@ And use them in application handler.
     }
 ```
 
-## TODO
-
-* Notifications.
-* Batches.
-* Spec 1.0 support.
-* Move to dedicated HTTP transport modules when available.
-* Introspection - very interesting idea proposed on #perl6 by timotimo, server knows everything about application class so maybe this data can be passed to client somehow and mapped under ^meta accessors, that would be self-descriptive server without need of WSDLs!
-
 ##CHANGELOG
 
 * 0.3 - compatibility fixes for Rakudo Star 2012.02
