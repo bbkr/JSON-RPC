@@ -4,6 +4,7 @@ Supports [2.0 specification](http://www.jsonrpc.org/specification).
 
 Compatible with Perl 6 [Rakudo](http://rakudo.org/) 2012.01+,
 included in Rakudo Star 2012.04+.
+included in [Rakudo Star](https://github.com/rakudo/star) 2012.04+.
 
 ## CLIENT
 
