@@ -62,7 +62,7 @@ method run ( Str :$host = '', Int :$port = 8080 ) {
         # wrap response in HTTP Response
         $response = $protocol ~ ' 200 OK' ~ "\x0D\x0A"
             ~ 'Content-Type: application/json' ~ "\x0D\x0A"
-            ~ 'Content-Length: ' ~ $response.bytes ~ "\x0D\x0A"
+            ~ 'Content-Length: ' ~ $response.encode( 'UTF-8' ).bytes ~ "\x0D\x0A"
             ~ "\x0D\x0A"
             ~ $response;
 

@@ -72,7 +72,7 @@ method handler( Str :$method!, :$params ) {
     my $request = to-json( %request );
     $request = 'POST ' ~ $.uri.Str ~ ' HTTP/1.0' ~ "\x0D\x0A"
         ~ 'Content-Type: application/json' ~ "\x0D\x0A"
-        ~ 'Content-Length: ' ~ $request.bytes ~ "\x0D\x0A"
+        ~ 'Content-Length: ' ~ $request.encode( 'UTF-8' ).bytes ~ "\x0D\x0A"
         ~ "\x0D\x0A"
         ~ $request;
 
