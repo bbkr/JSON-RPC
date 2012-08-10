@@ -138,6 +138,27 @@ It is recommended that you validate params in signatures instead of method bodie
 
 When request can be dispatched to more than one multi method then first candidate in definition order is chosen. This is not an error.
 
+### Can I use my own transport layer in server?
+
+Use `handle()` method that takes JSON request and returns JSON response (if any).
+Remember that notifications do not return JSON and your transport also should not send any data back to the client.
+
+Here is how FastCGI handling may look like.
+
+```perl
+	my $server = JSON::RPC::Server.new( application => My::App );
+	
+	while my $cgi = CGI::Fast.new {
+		my $response = $server.handle( json => $cgi.param( 'POSTDATA' ) ) or return;
+		
+		print 'HTTP/1.0 200 OK' ~ \x0D\x0A"
+            ~ 'Content-Type: application/json' ~ "\x0D\x0A"
+            ~ 'Content-Length: ' ~ $response.encode( 'UTF-8' ).bytes ~ "\x0D\x0A"
+            ~ "\x0D\x0A"
+            ~ $response;
+	}
+```
+
 ### Error handling
 
 Errors defined in 2.0 spec are represented by `JSON::RPC::Error` exceptions:
