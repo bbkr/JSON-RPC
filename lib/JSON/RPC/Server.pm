@@ -163,25 +163,18 @@ multi method validate_request (
         # so "params":null is incorrectly assumed to be to be valid -
         # this is not dangerous because both lack of params or params equals Any()
         # are dispatched to empty signature later
-        !$params.defined
-        # HACK: can be written as junction after RT 109188 fix
-        or $params ~~ Array
-        or $params ~~ Hash
+        !$params.defined or $params ~~ Array|Hash
     },
 
     # An identifier established by the Client that MUST contain
     # a String, Number, or NULL value if included.
     # TODO: replace with Any:U constraint when implemented
     :$id? where {
-        !$id.defined
-        # HACK: can be written as junction after RT 109188 fix
-        or $id ~~ Str
-        or $id ~~ Int
-        or $id ~~ Rat
-        or $id ~~ Num
+        !$id.defined or $id ~~ Str|Int|Rat|Num
     }
 
 ) {
+
     # spec version number
     return 2.0;
 }
