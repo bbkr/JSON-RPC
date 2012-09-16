@@ -158,11 +158,10 @@ multi method validate_request (
     # A Structured value that holds the parameter values to be used
     # during the invocation of the method. This member MAY be omitted.
     # (explained in "4.2 Parameter Structures")
-    :$params? where {
+    Iterable :$params? where {
         # INFO: as explained in RT 109182 lack of presence cannot be tested in signature
-        # so "params":null is incorrectly assumed to be to be valid -
-        # this is not dangerous because both lack of params or params equals Any()
-        # are dispatched to empty signature later
+        # so Iterable typization combined with defined check
+        # allows to distinguish valid lack of "params" member from incorrect "params":null value
         !$params.defined or $params ~~ Array|Hash
     },
 
