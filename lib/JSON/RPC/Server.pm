@@ -187,7 +187,7 @@ method search_method ( Str $name ) {
 
 method validate_params ( Routine $method, $params is copy ) {
 
-    # empty params are allowed
+    # lack of "params" member is allowed
     # but Any is not flattenable
     $params //= [ ];
 
@@ -205,7 +205,7 @@ method call ( Method $candidate, $params is copy ) {
 
     my $result;
 
-    # empty params are allowed
+    # lack of "params" member is allowed
     # but Any is not flattenable
     $params //= [ ];
 
