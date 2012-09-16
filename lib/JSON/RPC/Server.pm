@@ -3,10 +3,6 @@ use JSON::RPC::Error;
 
 class JSON::RPC::Server;
 
-# debug attributes
-has Bool $.debug = False;
-has %.history is rw;
-
 # application to dispatch requests to
 has Any $.application is rw = Any.new;
 
@@ -14,8 +10,6 @@ method run ( Str :$host = '', Int :$port = 8080 ) {
 
     # listen on given host/port
     my $listener = IO::Socket::INET.new( localhost => $host, localport => $port, :listen );
-
-    say 'Listening on ' ~ $host ~ ':' ~ $port if $.debug;
 
     # new client connected
     while my $connection = $listener.accept( ) {
@@ -32,7 +26,7 @@ method run ( Str :$host = '', Int :$port = 8080 ) {
 
             # for now another headers are ignored
             # they will be parsed properly after switch to HTTP::Transport
-            next unless $line ~~ m:i/^ 'Content-Length:' <ws> (\d+) /;
+            next unless $line ~~ m/i: ^ 'Content-Length:' <ws> (\d+) /;
 
             # store body length
             $body = $/[0];
@@ -85,17 +79,17 @@ method handler ( Str :$json! ) {
     );
 
     try {
-        my %parsed      = self.parse_json( $json );
-        my $version     = self.validate_request( |%parsed );
-        my $method      = self.search_method( %parsed{'method'} );
-        my $candidate   = self.validate_params( $method, %parsed{'params'} );
+        my $parsed      = self.parse_json( $json );
+        my $version     = self.validate_request( |$parsed );
+        my $method      = self.search_method( $parsed{'method'} );
+        my $candidate   = self.validate_params( $method, $parsed{'params'} );
 
         # This member is REQUIRED on success.
-        %response{'result'} = self.call( $candidate, %parsed{'params'} );
+        %response{'result'} = self.call( $candidate, $parsed{'params'} );
 
         # This member is REQUIRED on success.
         # It MUST be the same as the value of the id member in the Request Object.
-        %response{'id'} = %parsed{'id'};
+        %response{'id'} = $parsed{'id'};
 
         CATCH {
 
@@ -118,7 +112,7 @@ method handler ( Str :$json! ) {
 
                 # This member is REQUIRED.
                 # It MUST be the same as the value of the id member in the Request Object.
-                %response{'id'} = %parsed{'id'};
+                %response{'id'} = $parsed{'id'};
 
             }
 
@@ -127,21 +121,18 @@ method handler ( Str :$json! ) {
         }
     };
 
-    # in debug mode save last generated response
-    %.history = %response if $.debug;
-
     return to-json( %response );
 }
 
 method parse_json ( Str $body ) {
 
-    my %parsed;
+    my $parsed;
 
-    try { %parsed = from-json( $body ); };
+    try { $parsed = from-json( $body ); };
 
     JSON::RPC::ParseError.new( data => ~$! ).throw if defined $!;
 
-    return %parsed;
+    return $parsed;
 }
 
 multi method validate_request (

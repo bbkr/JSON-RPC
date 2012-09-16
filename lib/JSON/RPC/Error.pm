@@ -50,7 +50,7 @@ role JSON::RPC::Error is Exception {
 class JSON::RPC::ParseError does JSON::RPC::Error {
 
     method new ( :$data ) {
-        self.bless( *, code => -32700, message => 'Parse error', data => $data );
+        self.bless( *, code => -32700, message => 'Parse error.', data => $data );
     }
 
 }
@@ -59,7 +59,7 @@ class JSON::RPC::ParseError does JSON::RPC::Error {
 class JSON::RPC::InvalidRequest does JSON::RPC::Error {
 
     method new ( :$data ) {
-        self.bless( *, code => -32600, message => 'Invalid Request', data => $data );
+        self.bless( *, code => -32600, message => 'Invalid Request.', data => $data );
     }
 
 }
@@ -68,7 +68,7 @@ class JSON::RPC::InvalidRequest does JSON::RPC::Error {
 class JSON::RPC::MethodNotFound does JSON::RPC::Error {
 
     method new ( :$data ) {
-        self.bless( *, code => -32601, message => 'Method not found', data => $data );
+        self.bless( *, code => -32601, message => 'Method not found.', data => $data );
     }
 
 }
@@ -77,7 +77,7 @@ class JSON::RPC::MethodNotFound does JSON::RPC::Error {
 class JSON::RPC::InvalidParams does JSON::RPC::Error {
 
     method new ( :$data ) {
-        self.bless( *, code => -32602, message => 'Invalid params', data => $data );
+        self.bless( *, code => -32602, message => 'Invalid params.', data => $data );
     }
 
 }
@@ -86,7 +86,7 @@ class JSON::RPC::InvalidParams does JSON::RPC::Error {
 class JSON::RPC::InternalError does JSON::RPC::Error {
 
     method new ( :$data ) {
-        self.bless( *, code => -32603, message => 'Internal error', data => $data );
+        self.bless( *, code => -32603, message => 'Internal error.', data => $data );
     }
 
 }
@@ -95,7 +95,7 @@ class JSON::RPC::InternalError does JSON::RPC::Error {
 class JSON::RPC::TransportError does JSON::RPC::Error {
 
     method new ( :$data ) {
-        self.bless( *, code => -32300, message => 'Transport error', data => $data );
+        self.bless( *, code => -32300, message => 'Transport error.', data => $data );
     }
 
 }

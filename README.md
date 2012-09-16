@@ -119,7 +119,7 @@ Declare it as private.
 
 ### Should I declare signatures for server handler methods?
 
-It is recommended that you validate params in signatures instead of method bodies. This way server correctly returns "Invalid params" error (more info later) and method is not called if signature does not match - you can easily separate validation from logic.
+It is recommended that you validate params in signatures instead of method bodies. This way server correctly returns "Invalid params." error (more info later) and method is not called if signature does not match - you can easily separate validation from logic.
 
 ```perl
     method add_programmer (
@@ -190,7 +190,7 @@ Every exception has numeric `code` attribute that indicates the error type that 
     }
 ```
 
-**Server** does all the exception handling automatically. For example if you provide application handler without some method client will receive "Method not found" error on call to this method. However if you want to report error from method it can be done in two ways.
+**Server** does all the exception handling automatically. For example if you provide application handler without some method client will receive "Method not found." error on call to this method. However if you want to report error from method it can be done in two ways.
 
 * End method using die.
 
@@ -201,14 +201,14 @@ Every exception has numeric `code` attribute that indicates the error type that 
 	}
 ```
 
-Client will receive `message` attribute 'Internal error' with explanation "Cannot divide by 0" as `data` attribute.
+Client will receive `message` attribute "Internal error." with explanation "Cannot divide by 0" as `data` attribute.
 
 * Throw `JSON::RPC::Error` exception.
 
 ```perl
 	class My::App {
 	    method treasure {
-	        JSON::RPC::Error.new( code => -1, message => 'Access denied', data => 'Thou shall not pass' ).throw;
+	        JSON::RPC::Error.new( code => -1, message => 'Access denied.', data => 'Thou shall not pass!' ).throw;
 	    }
 	}
 ```
@@ -218,7 +218,7 @@ Exception `JSON::RPC::Error` is composable so you can easily define your own err
 ```perl
     class My::Error does JSON::RPC::Error {
         method new {
-            self.bless( *, code => -1, message => "Access denied", data => "Thou shall not pass" );
+            self.bless( *, code => -1, message => 'Access denied.', data => 'Thou shall not pass!' );
         }
     }
 ```
