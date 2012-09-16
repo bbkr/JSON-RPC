@@ -140,7 +140,7 @@ When request can be dispatched to more than one multi method then first candidat
 
 ### Can I use my own transport layer in server?
 
-Use `handle()` method that takes JSON request and returns JSON response (if any).
+Use `handler()` method that takes JSON request and returns JSON response (if any).
 
 Remember that notifications do not return JSON and your transport also should not send any data back to the client.
 
