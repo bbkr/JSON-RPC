@@ -135,34 +135,33 @@ method parse_json ( Str $body ) {
     return $parsed;
 }
 
+# A String specifying the version of the JSON-RPC protocol.
+# MUST be exactly "2.0".
+subset MemberJSONRPC of Str where '2.0';
+
+# A String containing the name of the method to be invoked.
+# Method names that begin with the word rpc followed by a period character
+# are reserved for rpc-internal methods and extensions
+# and MUST NOT be used for anything else.
+subset MemberMethod of Str where /^<!before rpc\.>/;
+
+# A Structured value that holds the parameter values to be used
+# during the invocation of the method. This member MAY be omitted.
+# (explained in "4.2 Parameter Structures")
+# INFO: as explained in RT 109182 lack of presence cannot be tested in signature
+# so Iterable typization combined with defined check
+# allows to distinguish valid lack of "params" member from incorrect "params":null value
+subset MemberParams of Iterable where Array|Hash|Any:U;
+
+# An identifier established by the Client that MUST contain
+# a String, Number, or NULL value if included.
+subset MemberID where Str|Int|Rat|Num|Any:U;
+
 multi method validate_request (
-
-    # A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0".
-    Str :$jsonrpc! where '2.0',
-
-    # A String containing the name of the method to be invoked.
-    # Method names that begin with the word rpc followed by a period character
-    # are reserved for rpc-internal methods and extensions
-    # and MUST NOT be used for anything else.
-    Str :$method! where /^<!before rpc\.>/,
-
-    # A Structured value that holds the parameter values to be used
-    # during the invocation of the method. This member MAY be omitted.
-    # (explained in "4.2 Parameter Structures")
-    Iterable :$params? where {
-        # INFO: as explained in RT 109182 lack of presence cannot be tested in signature
-        # so Iterable typization combined with defined check
-        # allows to distinguish valid lack of "params" member from incorrect "params":null value
-        !$params.defined or $params ~~ Array|Hash
-    },
-
-    # An identifier established by the Client that MUST contain
-    # a String, Number, or NULL value if included.
-    # TODO: replace with Any:U constraint when implemented
-    :$id? where {
-        !$id.defined or $id ~~ Str|Int|Rat|Num
-    }
-
+    MemberJSONRPC :$jsonrpc!,
+    MemberMethod :$method!,
+    MemberParams :$params?,
+    MemberID :$id?
 ) {
 
     # spec version number
