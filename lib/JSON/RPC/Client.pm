@@ -186,7 +186,7 @@ multi method validate_response (
 multi method validate_response {
 
     # none of above spec signatures claimed protocol version number
-    JSON::RPC::TransportError.new( reason => 'JSON-RPC Response Object is not valid' ).throw;
+    JSON::RPC::TransportError.new( data => 'JSON-RPC Response Object is not valid' ).throw;
 }
 
 multi method bind_error (
@@ -229,5 +229,5 @@ multi method bind_error (
 multi method bind_error {
 
     # none of above spec signatures claimed error field format
-    JSON::RPC::TransportError.new( reason => 'JSON-RPC Response Object is not valid' ).throw;
+    JSON::RPC::TransportError.new( data => 'JSON-RPC Response Object is not valid' ).throw;
 }
