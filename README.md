@@ -83,7 +83,7 @@ Use uri param in constructor.
 Use port param in `run( )` method.
 
 ```perl
-    .run( port => 9999 );
+    JSON::RPC::Server.new( application => My::App ).run( port => 9999 );
 ```
 
 ### Should I use class name or object instance as server handler?
@@ -140,7 +140,11 @@ When request can be dispatched to more than one multi method then first candidat
 
 ### Can I use my own transport layer in server?
 
-Use `handler( Str )` method which takes JSON request and returns JSON response (if any).
+Do not `run( )` server. Instead use `handler( )` method which takes JSON request and returns JSON response (if any).
+
+```perl
+    my $response = JSON::RPC::Server.new( application => My::App ).handler( json => $request );
+```
 
 Remember that notifications do not return JSON and your transport also should not send any data back to the client.
 
@@ -149,7 +153,7 @@ Remember that notifications do not return JSON and your transport also should no
 **Server** accepts debug param in `run( )` method.
 
 ```perl
-    .run( :debug );
+    JSON::RPC::Server.new( application => My::App ).run( :debug );
 ```
 
 **Client** has no debugging yet.
