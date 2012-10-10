@@ -1,72 +1,39 @@
 use JSON::Tiny;
 use JSON::RPC::Error;
+use HTTP::Easy::PSGI;
 
 class JSON::RPC::Server;
 
 # application to dispatch requests to
 has Any $.application is rw = Any.new;
 
-method run ( Str :$host = '', Int :$port = 8080 ) {
+method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
 
-    # listen on given host/port
-    my $listener = IO::Socket::INET.new( localhost => $host, localport => $port, :listen );
-
-    # new client connected
-    while my $connection = $listener.accept( ) {
-
-        # process status line
-        my ( $method, $uri, $protocol ) = $connection.get( ).comb( /\S+/ );
-
-        my $body;
-        loop {
-            my $line = $connection.get( );
-
-            # line that ends header section
-            last if $line ~~ "\x0D";
-
-            # for now another headers are ignored
-            # they will be parsed properly after switch to HTTP::Transport
-            next unless $line ~~ m/i: ^ 'Content-Length:' <ws> (\d+) /;
-
-            # store body length
-            $body = $/[0];
+    my $app = sub (%env) {
+        
+        # request can be Str, Buf or IO as described in
+        # https://github.com/supernovus/perl6-http-easy/issues/3
+        my $request;
+        given %env{'psgi.input'} {
+            when Str { $request = $_ }
+            when Buf { $request = .decode( ) }
+            when IO { $request = .slurp( ) }
         }
-
-        # RFC 2616
-        # For compatibility with HTTP/1.0 applications, HTTP/1.1 requests
-        # containing a message-body MUST include a valid Content-Length header
-        # field unless the server is known to be HTTP/1.1 compliant. If a
-        # request contains a message-body and a Content-Length is not given,
-        # the server SHOULD respond with 400 (bad request) if it cannot
-        # determine the length of the message...
-
-        unless $body {
-            my $response = $protocol ~ ' 400 Bad Request' ~ "\x0D\x0A" ~ "\x0D\x0A";
-            $connection.send( $response );
-            $connection.close( );
-            next;
-        }
-
-        # receive message body 
-        $body = $connection.read( $body ).decode( );
-
+        
         # dispatch remote procedure call
-        my $response = self.handler( json => $body );
+        my $response = self.handler( json => $request );
+        
+        return [
+            200, [
+                'Content-Type' => 'application/json',
+                'Content-Length' => $response.encode( 'UTF-8' ).bytes
+            ], [ $response ]
+        ];
+    };
 
-        # wrap response in HTTP Response
-        $response = $protocol ~ ' 200 OK' ~ "\x0D\x0A"
-            ~ 'Content-Type: application/json' ~ "\x0D\x0A"
-            ~ 'Content-Length: ' ~ $response.encode( 'UTF-8' ).bytes ~ "\x0D\x0A"
-            ~ "\x0D\x0A"
-            ~ $response;
-
-        # send response to client
-        $connection.send( $response );
-
-        # close connection with client, no keep-alive yet
-        $connection.close( );   
-    }
-
+    my $psgi = HTTP::Easy::PSGI.new( :$host, :$port, :$debug );
+    $psgi.app( $app );
+    $psgi.run;
 }
 
 method handler ( Str :$json! ) {
