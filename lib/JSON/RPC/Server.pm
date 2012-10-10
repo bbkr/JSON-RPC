@@ -131,6 +131,7 @@ method parse_json ( Str $body ) {
     try { $parsed = from-json( $body ); };
 
     JSON::RPC::ParseError.new( data => ~$! ).throw if defined $!;
+    JSON::RPC::ParseError.new.throw unless $parsed ~~ Array|Hash;
 
     return $parsed;
 }
