@@ -4,7 +4,7 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Server;
 
-plan( 16 );
+plan( 18 );
 
 class CustomError does JSON::RPC::Error {
     method new {
@@ -157,6 +157,20 @@ spec(
     'no params and empty response',
     '{"jsonrpc": "2.0", "method": "void", "id": 1}',
     '{"jsonrpc": "2.0", "result": null, "id": 1}',
+    cannonicalize => False
+);
+
+spec(
+    'parse error (empty string)',
+    '',
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
+    cannonicalize => False
+);
+
+spec(
+    'parse error (top container is not JSON Object or Array)',
+    '42',
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
     cannonicalize => False
 );
 
