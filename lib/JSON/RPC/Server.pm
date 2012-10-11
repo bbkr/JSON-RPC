@@ -118,7 +118,7 @@ subset MemberMethod of Str where /^<!before rpc\.>/;
 # (explained in "4.2 Parameter Structures")
 # INFO: as explained in RT 109182 lack of presence cannot be tested in signature
 # so Iterable typization combined with defined check
-# allows to distinguish valid lack of "params" member from incorrect "params":null value
+# allows to distinguish valid lack of "params" member from incorrect "params":null value.
 subset MemberParams of Iterable where Array|Hash|Any:U;
 
 # An identifier established by the Client that MUST contain
