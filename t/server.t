@@ -197,7 +197,8 @@ spec(
 
 sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$cannonicalize = True ) {
 
-    my $got = from-json( $rpc.handler( json => $data_sent_to_Server ) );
+    my ($got, $expected) = map { .defined ?? from-json( $_ ) !! $_ },
+        $rpc.handler( json => $data_sent_to_Server ), $data_sent_to_Client;
     
     # specification examples do not contain optional field "data" in "error" member
     # so it must be removed from all Response objects before comparison
@@ -208,7 +209,5 @@ sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$cannonica
         }
     }
     
-    my $expected = from-json( $data_sent_to_Client );
-
     is_deeply $got, $expected, $description;
 }
