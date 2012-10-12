@@ -166,18 +166,18 @@ method !validate_request ( $request ) {
 
     # A String specifying the version of the JSON-RPC protocol.
     # MUST be exactly "2.0".
-    subset MemberJSONRPC where '2.0';
+    subset MemberJSONRPC of Str where '2.0';
 
     # A String containing the name of the method to be invoked.
     # Method names that begin with the word rpc followed by a period character
     # are reserved for rpc-internal methods and extensions
     # and MUST NOT be used for anything else.
-    subset MemberMethod where /^<!before rpc\.>/;
+    subset MemberMethod of Str where /^<!before rpc\.>/;
 
     # A Structured value that holds the parameter values to be used
     # during the invocation of the method. This member MAY be omitted.
     # (explained in "4.2 Parameter Structures")
-    subset MemberParams where Array|Hash;
+    subset MemberParams of Iterable where Array|Hash;
 
     # An identifier established by the Client that MUST contain
     # a String, Number, or NULL value if included.
