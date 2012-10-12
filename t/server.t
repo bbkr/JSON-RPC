@@ -1,10 +1,10 @@
-BEGIN { @*INC.unshift('lib') }
+BEGIN { @*INC.unshift( 'lib' ) }
 
 use Test;
 use JSON::Tiny;
 use JSON::RPC::Server;
 
-plan( 18 );
+plan( 27 );
 
 class CustomError does JSON::RPC::Error {
     method new {
@@ -17,15 +17,19 @@ class Application {
     # methods used by specification examples
     multi method subtract ( $minuend!, $subtrahend! ) { return $minuend - $subtrahend }
     multi method subtract ( :$minuend!, :$subtrahend! ) { return $minuend - $subtrahend }
+    method sum ( *@items ) { return [+]( @items ) }
+    method notify_hello ( $count ){ $.count = $count }
+    method get_data { return [ 'hello', 5 ] }
     
     # methods for own tests
+    has Int $.count is rw;
     method void { return }
     multi method suicide ( Bool :$note! ) { die 'The cake is a lie!' }
     multi method suicide { CustomError.new.throw }
     method !toothbrush { "No!" }
 }
 
-my $rpc = JSON::RPC::Server.new( application => Application );
+my $rpc = JSON::RPC::Server.new( application => Application.new );
 
 isa_ok $rpc, JSON::RPC::Server;
 
@@ -55,18 +59,17 @@ spec(
     '{"jsonrpc": "2.0", "result": 19, "id": 4}'
 );
 
-# NYI
-# spec(
-#     'a Notification',
-#     '{"jsonrpc": "2.0", "method": "update", "params": [1,2,3,4,5]}',
-#     undef
-# );
-# 
-# spec(
-#     'a Notification',
-#     '{"jsonrpc": "2.0", "method": "foobar"}',
-#     undef
-# );
+spec(
+    'a Notification',
+    '{"jsonrpc": "2.0", "method": "update", "params": [1,2,3,4,5]}',
+    Nil
+);
+
+spec(
+    'a Notification',
+    '{"jsonrpc": "2.0", "method": "foobar"}',
+    Nil
+);
 
 spec(
     'rpc call of non-existent method',        
@@ -101,55 +104,51 @@ spec(
     '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}'
 );
 
-# NYI
-# spec(
-#     'rpc call with an invalid Batch (but not empty)',
-#     '[1]',
-#     '[
-#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
-#     ]'
-# );
+spec(
+    'rpc call with an invalid Batch (but not empty)',
+    '[1]',
+    '[
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+    ]'
+);
 
-# NYI
-# spec(
-#     'rpc call with invalid Batch',
-#     '[1,2,3]',
-#     '[
-#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
-#     ]'
-# );
+spec(
+    'rpc call with invalid Batch',
+    '[1,2,3]',
+    '[
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+    ]'
+);
 
-# NYI
-# spec(
-#     'rpc call Batch',
-#     '[
-#         {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
-#         {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
-#         {"jsonrpc": "2.0", "method": "subtract", "params": [42,23], "id": "2"},
-#         {"foo": "boo"},
-#         {"jsonrpc": "2.0", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
-#         {"jsonrpc": "2.0", "method": "get_data", "id": "9"} 
-#     ]',
-#     '[
-#         {"jsonrpc": "2.0", "result": 7, "id": "1"},
-#         {"jsonrpc": "2.0", "result": 19, "id": "2"},
-#         {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-#         {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "5"},
-#         {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
-#     ]'
-# );
+spec(
+    'rpc call Batch',
+    '[
+        {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+        {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
+        {"jsonrpc": "2.0", "method": "subtract", "params": [42,23], "id": "2"},
+        {"foo": "boo"},
+        {"jsonrpc": "2.0", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
+        {"jsonrpc": "2.0", "method": "get_data", "id": "9"} 
+    ]',
+    '[
+        {"jsonrpc": "2.0", "result": 7, "id": "1"},
+        {"jsonrpc": "2.0", "result": 19, "id": "2"},
+        {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
+        {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "5"},
+        {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
+    ]'
+);
 
-# NYI
-# spec(
-#     'rpc call Batch (all notifications)',
-#     '[
-#         {"jsonrpc": "2.0", "method": "notify_sum", "params": [1,2,4]},
-#         {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]}
-#     ]',
-#     undef   # Nothing is returned for all notification batches
-# );
+spec(
+    'rpc call Batch (all notifications)',
+    '[
+        {"jsonrpc": "2.0", "method": "notify_sum", "params": [1,2,4]},
+        {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]}
+    ]',
+    Nil # Nothing is returned for all notification batches
+);
 
 # Other tests not covered by specification examples
 
@@ -196,6 +195,20 @@ spec(
 );
 
 spec(
+    'batch recursion forbidden',
+    '[[{"jsonrpc": "2.0", "method": "void", "id": 1}]]',
+    '[{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}]',
+    cannonicalize => False
+);
+
+spec(
+    'null id does not mean notification (null is not the same as omitted id)',
+    '{"jsonrpc": "2.0", "method": "void", "id": null}',
+    '{"jsonrpc": "2.0", "result": null, "id": null}',
+    cannonicalize => False
+);
+
+spec(
     'internal error',
     '{"jsonrpc": "2.0", "method": "suicide", "params": {"note": true}, "id": 1}',
     '{"jsonrpc": "2.0", "error": {"code": -32603, "message": "Internal error.", "data": "The cake is a lie!"}, "id": 1}',
@@ -209,6 +222,8 @@ spec(
     cannonicalize => False
 );
 
+is $rpc.application.count, 7, 'notification was processed';
+
 sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$cannonicalize = True ) {
 
     my ($got, $expected) = map { .defined ?? from-json( $_ ) !! $_ },
@@ -218,7 +233,7 @@ sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$cannonica
     # so it must be removed from all Response objects before comparison
     if $cannonicalize {
         given $got {
-            when Array { ... }
+            when Array { for $got.list { $_{ 'error' }.delete( 'data' ) if $_{ 'error' }{ 'data' }.defined } }
             when Hash { $got{ 'error' }.delete( 'data' ) if $got{ 'error' }{ 'data' }.defined }
         }
     }

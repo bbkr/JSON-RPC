@@ -16,8 +16,8 @@ method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
         my $request;
         given %env{'psgi.input'} {
             when Str { $request = $_ }
-            when Buf { $request = .decode( ) }
-            when IO { $request = .slurp( ) }
+            when Buf { $request = .decode }
+            when IO { $request = .slurp }
         }
         
         # dispatch remote procedure call
@@ -37,61 +37,115 @@ method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
 }
 
 method handler ( Str :$json! ) {
+    my $out;
 
-    # container for response
-    my %response = (
+    # Response object template
+    my %template = (
         # A String specifying the version of the JSON-RPC protocol.
         # MUST be exactly "2.0".
         'jsonrpc' => '2.0',
     );
 
     try {
-        my $parsed      = self.parse_json( $json );
-        my $version     = self.validate_request( |$parsed );
-        my $method      = self.search_method( $parsed{'method'} );
-        my $candidate   = self.validate_params( $method, $parsed{'params'} );
+        my $parsed = self!parse_json( $json );
 
-        # This member is REQUIRED on success.
-        %response{'result'} = self.call( $candidate, $parsed{'params'} );
+        my @requests;
+        if $parsed ~~ Array {
+            # To send several Request objects at the same time,
+            # the Client MAY send an Array filled with Request objects.
+            # INFO: empty Array is not valid request
+            JSON::RPC::InvalidRequest.new.throw unless $parsed.elems;
+            @requests = $parsed.list;
+        }
+        else {
+            @requests.push( $parsed );
+        }
+        
+        my @responses = gather for @requests -> $request {
 
-        # This member is REQUIRED on success.
-        # It MUST be the same as the value of the id member in the Request Object.
-        %response{'id'} = $parsed{'id'};
+            # Response object
+            my %response;
+            
+            try {
+                my $mode        = self!validate_request( $request );
+                
+                # When a rpc call is made, the Server MUST reply with a Response,
+                # except for in the case of Notifications.
+                unless $mode ~~ 'Notification' {
+                    %response = %template;
+                    
+                    # This member is REQUIRED.
+                    # It MUST be the same as the value of the id member in the Request Object.
+                    %response{'id'} = $request{'id'};
+                }
+                
+                my $method      = self!search_method( $request{'method'} );
+                my $candidate   = self!validate_params( $method, $request{'params'} );
+                my $result      = self!call( $candidate, $request{'params'} );
+                
+                # The Server MUST NOT reply to a Notification,
+                # including those that are within a batch request.
+                next if $mode ~~ 'Notification';
+
+                # This member is REQUIRED on success.
+                %response{'result'} = $result;
+
+                CATCH {
+                    when JSON::RPC::InvalidRequest {
+
+                        %response = %template;
+
+                        # This member is REQUIRED on error.
+                        %response{'error'} = .Hash;
+
+                        # This member is REQUIRED.
+                        # If there was an error in detecting the id in the Request object, it MUST be Null.
+                        %response{'id'} = Any;
+                    }
+                    when JSON::RPC::Error {
+
+                        # Notifications are not confirmable by definition,
+                        # since they do not have a Response object to be returned.
+                        # As such, the Client would not be aware of any errors.
+                        next if $mode ~~ 'Notification';
+
+                        # This member is REQUIRED on error.
+                        %response{'error'} = .Hash;
+                    }
+                }
+            }
+
+            take {%response};
+        }
+
+        return unless ?@responses;
+        
+        $out = $parsed ~~ Array ?? @responses !! @responses.pop;
 
         CATCH {
 
+            # If the batch rpc call itself fails to be recognized as an valid JSON
+            # or as an Array with at least one value,
+            # the response from the Server MUST be a single Response object.
             when JSON::RPC::ParseError|JSON::RPC::InvalidRequest {
 
+                # Response object
+                $out = %template;
+                
                 # This member is REQUIRED on error.
-                %response{'error'} = .Hash;
+                $out{'error'} = .Hash;
 
                 # This member is REQUIRED.
                 # If there was an error in detecting the id in the Request object, it MUST be Null.
-                %response{'id'} = Any;
-
+                $out{'id'} = Any;
             }
-
-            when JSON::RPC::Error {
-
-                # This member is REQUIRED on error.
-                %response{'error'} = .Hash;
-
-
-                # This member is REQUIRED.
-                # It MUST be the same as the value of the id member in the Request Object.
-                %response{'id'} = $parsed{'id'};
-
-            }
-
-            # do not use default handler
-            # propagate unhandled exception to parent scope
         }
     };
 
-    return to-json( %response );
+    return to-json( $out );
 }
 
-method parse_json ( Str $body ) {
+method !parse_json ( Str $body ) {
 
     my $parsed;
 
@@ -103,47 +157,40 @@ method parse_json ( Str $body ) {
     return $parsed;
 }
 
-# A String specifying the version of the JSON-RPC protocol.
-# MUST be exactly "2.0".
-subset MemberJSONRPC of Str where '2.0';
+method !validate_request ( $request ) {
+    my $mode;
 
-# A String containing the name of the method to be invoked.
-# Method names that begin with the word rpc followed by a period character
-# are reserved for rpc-internal methods and extensions
-# and MUST NOT be used for anything else.
-subset MemberMethod of Str where /^<!before rpc\.>/;
+    # A String specifying the version of the JSON-RPC protocol.
+    # MUST be exactly "2.0".
+    subset MemberJSONRPC where '2.0';
 
-# A Structured value that holds the parameter values to be used
-# during the invocation of the method. This member MAY be omitted.
-# (explained in "4.2 Parameter Structures")
-# INFO: as explained in RT 109182 lack of presence cannot be tested in signature
-# so Iterable typization combined with defined check
-# allows to distinguish valid lack of "params" member from incorrect "params":null value.
-subset MemberParams of Iterable where Array|Hash|Any:U;
+    # A String containing the name of the method to be invoked.
+    # Method names that begin with the word rpc followed by a period character
+    # are reserved for rpc-internal methods and extensions
+    # and MUST NOT be used for anything else.
+    subset MemberMethod where /^<!before rpc\.>/;
 
-# An identifier established by the Client that MUST contain
-# a String, Number, or NULL value if included.
-subset MemberID where Str|Int|Rat|Num|Any:U;
+    # A Structured value that holds the parameter values to be used
+    # during the invocation of the method. This member MAY be omitted.
+    # (explained in "4.2 Parameter Structures")
+    subset MemberParams where Array|Hash;
 
-multi method validate_request (
-    MemberJSONRPC :$jsonrpc!,
-    MemberMethod :$method!,
-    MemberParams :$params?,
-    MemberID :$id?
-) {
+    # An identifier established by the Client that MUST contain
+    # a String, Number, or NULL value if included.
+    subset MemberID where Str|Int|Rat|Num|Any:U;
 
-    # spec version number
-    return 2.0;
+    given $request {
+        when :( MemberJSONRPC :$jsonrpc!, MemberMethod :$method!, MemberID :$id! ) { $mode = 'Request' }
+        when :( MemberJSONRPC :$jsonrpc!, MemberMethod :$method!, MemberParams :$params!, MemberID :$id! ) { $mode = 'Request' }
+        when :( MemberJSONRPC :$jsonrpc!, MemberMethod :$method! ) { $mode = 'Notification' }
+        when :( MemberJSONRPC :$jsonrpc!, MemberMethod :$method!, MemberParams :$params! ) { $mode = 'Notification' }
+        default { JSON::RPC::InvalidRequest.new.throw; }
+    }
+    
+    return $mode;
 }
 
-multi method validate_request {
-
-    # none of above spec signatures claimed protocol version number
-    JSON::RPC::InvalidRequest.new.throw;
-}
-
-
-method search_method ( Str $name ) {
+method !search_method ( Str $name ) {
 
     # locate public method in application
     my $method = $.application.^find_method( $name );
@@ -153,7 +200,7 @@ method search_method ( Str $name ) {
     return $method;
 }
 
-method validate_params ( Routine $method, $params is copy ) {
+method !validate_params ( Routine $method, $params is copy ) {
 
     # lack of "params" member is allowed
     # but Any is not flattenable
@@ -164,12 +211,12 @@ method validate_params ( Routine $method, $params is copy ) {
 
     JSON::RPC::InvalidParams.new.throw unless @candidates;
 
-    # many mathches is not an error
-    # first matching candidate is taken
+    # many mathches are not an error
+    # first candidate is taken
     return @candidates.shift;
 }
 
-method call ( Method $candidate, $params is copy ) {
+method !call ( Method $candidate, $params is copy ) {
 
     my $result;
 
@@ -181,12 +228,8 @@ method call ( Method $candidate, $params is copy ) {
         $result = $candidate.( self.application, |$params );
 
         CATCH {
-            # pass-through error class implemented by user
-            when JSON::RPC::Error {
-                .rethrow;
-            }
-            # wrap error reason as internal error
-            default {
+            # wrap unhandled error type as internal error
+            when not $_ ~~ JSON::RPC::Error {
                 JSON::RPC::InternalError.new( data => .Str ).throw;
             }
         }
