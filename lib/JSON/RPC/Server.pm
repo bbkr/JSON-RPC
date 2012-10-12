@@ -23,6 +23,10 @@ method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
         # dispatch remote procedure call
         my $response = self.handler( json => $request );
         
+        # on empty response return HTTP 200 as adviced in
+        # https://groups.google.com/forum/?fromgroups=#!topic/json-rpc/X7I2oxIOX8A
+        return [ 200, [ ], [ ] ] unless $response;
+        
         return [
             200, [
                 'Content-Type' => 'application/json',
