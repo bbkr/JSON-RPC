@@ -21,13 +21,13 @@ INIT {
             # so dispatch has to be done manually depending on nature of passed params
             return method ( *%named, *@positional ) {
                 if ?%named {
-                    return $object.handler( method => $name, params => %named );
+                    return $object!handler( method => $name, params => %named );
                 }
                 elsif ?@positional {
-                    return $object.handler( method => $name, params => @positional );
+                    return $object!handler( method => $name, params => @positional );
                 }
                 else {
-                    return $object.handler( method => $name );
+                    return $object!handler( method => $name );
                 }
             };
 
@@ -47,7 +47,7 @@ multi submethod BUILD ( Str :$url! ) {
     $!uri = URI.new( $url, :is_validating );
 }
 
-method handler( Str :$method!, :$params ) {
+method !handler( Str :$method!, :$params ) {
 
     # container for request
     my %request = (
