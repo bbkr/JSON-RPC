@@ -4,7 +4,7 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Server;
 
-plan( 27 );
+plan( 28 );
 
 class CustomError does JSON::RPC::Error {
     method new {
@@ -27,6 +27,7 @@ class Application {
     multi method suicide ( Bool :$note! ) { die 'The cake is a lie!' }
     multi method suicide { CustomError.new.throw }
     method !toothbrush { "No!" }
+    method rpc { return True }
 }
 
 my $rpc = JSON::RPC::Server.new( application => Application.new );
@@ -156,6 +157,13 @@ spec(
     'no params and empty response',
     '{"jsonrpc": "2.0", "method": "void", "id": 1}',
     '{"jsonrpc": "2.0", "result": null, "id": 1}',
+    cannonicalize => False
+);
+
+spec(
+    'method named rpc can be called',
+    '{"jsonrpc": "2.0", "method": "rpc", "id": 1}',
+    '{"jsonrpc": "2.0", "result": true, "id": 1}',
     cannonicalize => False
 );
 
