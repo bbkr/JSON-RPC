@@ -100,7 +100,7 @@ method handler( Str :$method!, :$params ) {
 
         # for now another headers are ignored
         # they will be parsed properly after switch to HTTP::Transport
-        next unless $line ~~ m:i/^ 'Content-Length:' <ws> (\d+) /;
+        next unless $line ~~ m/:i ^ 'Content-Length:' <ws> (\d+) /;
 
         # store body length
         $body = $/[0];
