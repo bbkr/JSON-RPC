@@ -2,7 +2,7 @@
 
 Supports [2.0 specification](http://www.jsonrpc.org/specification).
 
-Compatible with Perl 6 [Rakudo](http://rakudo.org/) 2012.07+,
+Compatible with Perl 6 [Rakudo](http://rakudo.org/) 2012.10+,
 included in [Rakudo Star](https://github.com/rakudo/star) 2012.04+.
 
 ## CLIENT
@@ -72,7 +72,7 @@ There are 4 specs of JSON-RPC published so far:
 
 ### Can I use URI object to initialize client
 
-Use uri param in constructor.
+Use `uri` param in constructor.
 
 ```perl
 	JSON::RPC::Client.new( uri => URI.new( 'http://localhost:8080' ) );
@@ -80,7 +80,7 @@ Use uri param in constructor.
 
 ### Can I bind server to port other than 8080?
 
-Use port param in `run( )` method.
+Use `port` param in `run( )` method.
 
 ```perl
     JSON::RPC::Server.new( application => My::App ).run( port => 9999 );
@@ -138,25 +138,58 @@ It is recommended that you validate params in signatures instead of method bodie
 
 When request can be dispatched to more than one multi method then first candidate in definition order is chosen. This is not an error.
 
-### Can I use my own transport layer in server?
+### Can I use my own transport layers?
 
-Do not `run( )` server. Instead use `handler( )` method which takes JSON request and returns JSON response (if any).
+This is useful when you want to use JSON-RPC on some framework which provides its own data exchange methods. It is even possible to use JSON-RPC over protocols different than HTTP.
+
+**Client**
+
+Pass `transport` param to `new( )` instead of `uri`/ `url` param. This should be a closure that accepts JSON request and returns JSON response.
 
 ```perl
-    my $response = JSON::RPC::Server.new( application => My::App ).handler( json => $request );
+	my $transport = sub ( Str :$json, Bool :$is_notification ) {
+		if :is_notification {
+			send_request_in_my_own_way_without_expecting_response( $request );
+			return;
+		}
+		else {
+			return send_request_in_my_own_way_and_obtain_response( $request );
+		}
+	}
+
+	my $client = JSON::RPC::Client.new( transport => $transport );
 ```
 
-Remember that notifications do not return JSON and your transport also should not send any data back to the client.
+Your transport will be given extra param `is_notification` which informs it that request is a Notification or Batch of Notifications and response is not expected from the server.
+
+**Server**
+
+Do not `run( )` server. Instead use `handler( )` method which takes JSON request param and returns JSON response.
+
+```perl
+	my $server = JSON::RPC::Server.new( application => My::App );
+    
+	my $response = handler( json => receive_request_in_my_own_way( ) );
+	send_response_in_my_own_way( $response ) if defined $response;
+```
+
+It is possible that request is a Notification or Batch of Notifications and `$response` is not returned from the server.
+
+**Notifications**
+
+When request is a Notification or Batch of Notifications then client is not expecting response and server should not return one. That is not always possible due to specification of used protocol or assumptions in framework used. In this case try to use most undefined response possible.
+
+For example code `204 No Content` should be used in HTTP transport.
 
 ### How to enable debugging?
 
-**Server** accepts debug param in `run( )` method.
+**Client** has no debugging yet.
+
+**Server** accepts `debug` param in `run( )` method.
 
 ```perl
     JSON::RPC::Server.new( application => My::App ).run( :debug );
 ```
-
-**Client** has no debugging yet.
 
 ### Error handling
 

@@ -4,9 +4,16 @@ use JSON::RPC::Error;
 
 class JSON::RPC::Client;
 
-has URI $.uri is rw = die 'URI is missing';
+has Code $.transport is rw = die 'Transport is missing';
+
+has Bool $!is_batch = False;
+has Bool $!is_notification = False;
 
 INIT {
+
+    # use ::(name) declarations instead of using meta in Rakudo 2012.10 with RT #115334 fix
+    $?PACKAGE.^add_method('rpc.batch', sub ( $object ) { return $object.clone( :is_batch ) } );
+    $?PACKAGE.^add_method('rpc.notification', sub ( $object ) { return $object.clone( :is_notification ) } );
 
     # install method auto dispatch
     $?PACKAGE.^add_fallback(
@@ -39,49 +46,35 @@ INIT {
 
 multi submethod BUILD ( URI :$uri! ) {
 
-    $!uri = $uri;
+    $!transport = &transport.assuming( uri => $uri );
 }
 
 multi submethod BUILD ( Str :$url! ) {
 
-    $!uri = URI.new( $url, :is_validating );
+    $!transport = &transport.assuming( uri => URI.new( $url, :is_validating ) );
 }
 
-method !handler( Str :$method!, :$params ) {
+multi submethod BUILD ( Code :$transport! ) {
 
-    # container for request
-    my %request = (
+    $!transport = $transport;
+}
 
-        # A String specifying the version of the JSON-RPC protocol.
-        # MUST be exactly "2.0".
-        'jsonrpc' => '2.0',
-
-        # A String containing the name of the method to be invoked.
-        'method' => $method,
-
-        # generate random id to identify remote procedure call and response
-        'id' => ( 'a' .. 'z', 'A' .. 'Z', 0 .. 9 ).roll( 32 ).join( )
-    );
-
-    # A Structured value that holds the parameter values
-    # to be used during the invocation of the method.
-    # This member MAY be omitted.
-    %request{'params'} = $params if $params.defined;
-
+# TODO: Replace it with HTTP::Client in the future
+sub transport ( URI :$uri, Str :$json ) {
+    
     # wrap request in HTTP Request
-    my $request = to-json( %request );
-    $request = 'POST ' ~ $.uri.Str ~ ' HTTP/1.0' ~ "\x0D\x0A"
+    my $request = 'POST ' ~ $uri.Str ~ ' HTTP/1.0' ~ "\x0D\x0A"
         ~ 'Content-Type: application/json' ~ "\x0D\x0A"
-        ~ 'Content-Length: ' ~ $request.encode( 'UTF-8' ).bytes ~ "\x0D\x0A"
+        ~ 'Content-Length: ' ~ $json.encode( 'UTF-8' ).bytes ~ "\x0D\x0A"
         ~ "\x0D\x0A"
-        ~ $request;
+        ~ $json;
 
     # make new connection to server
     # no keep-alive yet
-    my $connection = IO::Socket::INET.new( host => $.uri.host, port => $.uri.port );
+    my $connection = IO::Socket::INET.new( host => $uri.host, port => $uri.port );
 
     # send request to server
-    $connection.send( $request);
+    $connection.send( $request );
 
     # process status line
     my ( $HTTP-Version, $Status-Code, $Reason-Phrase ) = $connection.get( ).comb( /\S+/ );
@@ -120,8 +113,35 @@ method !handler( Str :$method!, :$params ) {
 
     # close connection with server, no keep-alive yet
     $connection.close();
+    
+    return $body;
+}
 
-    my %response = self.parse_json( $body );
+method !handler( Str :$method!, :$params ) {
+
+    # container for request
+    my %request = (
+
+        # A String specifying the version of the JSON-RPC protocol.
+        # MUST be exactly "2.0".
+        'jsonrpc' => '2.0',
+
+        # A String containing the name of the method to be invoked.
+        'method' => $method,
+
+        # generate random id to identify remote procedure call and response
+        'id' => ( 'a' .. 'z', 'A' .. 'Z', 0 .. 9 ).roll( 32 ).join( )
+    );
+
+    # A Structured value that holds the parameter values
+    # to be used during the invocation of the method.
+    # This member MAY be omitted.
+    %request{'params'} = $params if $params.defined;
+
+
+    my $request = to-json( %request );
+    my $response = $!transport.( json => $request );
+    my %response = self.parse_json( $response );
     my $version = self.validate_response( |%response );
 
     # check id of response
