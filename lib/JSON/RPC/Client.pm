@@ -145,7 +145,7 @@ method !handler( Str :$method!, :$params ) {
     my $version = self.validate_response( |%response );
 
     # check id of response
-    unless %request{'id'} ~~ %response{'id'} {
+    unless %request{'id'} eqv %response{'id'} {
         JSON::RPC::TransportError.new( data => 'JSON RPC request id is different than response id' ).throw;
     }
 
