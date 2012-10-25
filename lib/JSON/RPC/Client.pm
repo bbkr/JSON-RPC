@@ -5,6 +5,11 @@ use JSON::RPC::Error;
 class JSON::RPC::Client;
 
 has Code $.transport is rw = die 'Transport is missing';
+has Code $.sequencer is rw = sub {
+    state @pool = 'a' .. 'z', 'A' .. 'Z', 0 .. 9;
+    
+    return @pool.roll( 32 ).join( );
+};
 
 has Bool $!is_batch = False;
 has Bool $!is_notification = False;
@@ -119,8 +124,8 @@ sub transport ( URI :$uri, Str :$json ) {
 
 method !handler( Str :$method!, :$params ) {
 
-    # container for request
-    my %request = (
+    # Response object template
+    my %template = (
 
         # A String specifying the version of the JSON-RPC protocol.
         # MUST be exactly "2.0".
@@ -128,24 +133,26 @@ method !handler( Str :$method!, :$params ) {
 
         # A String containing the name of the method to be invoked.
         'method' => $method,
-
-        # generate random id to identify remote procedure call and response
-        'id' => ( 'a' .. 'z', 'A' .. 'Z', 0 .. 9 ).roll( 32 ).join( )
     );
+    
+    # An identifier established by the Client
+    # that MUST contain a String, Number, or NULL value if included.
+    # If it is not included it is assumed to be a notification.
+    %template{'id'} = self.sequencer.( ) unless $!is_notification;
 
     # A Structured value that holds the parameter values
     # to be used during the invocation of the method.
     # This member MAY be omitted.
-    %request{'params'} = $params if $params.defined;
+    %template{'params'} = $params if $params.defined;
 
 
-    my $request = to-json( %request );
+    my $request = to-json( %template );
     my $response = $!transport.( json => $request );
     my %response = self.parse_json( $response );
     my $version = self.validate_response( |%response );
 
     # check id of response
-    unless %request{'id'} eqv %response{'id'} {
+    unless %template{'id'} eqv %response{'id'} {
         JSON::RPC::TransportError.new( data => 'JSON RPC request id is different than response id' ).throw;
     }
 
