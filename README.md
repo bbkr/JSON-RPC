@@ -147,20 +147,14 @@ This is useful when you want to use JSON-RPC on some framework which provides it
 Pass `transport` param to `new( )` instead of `uri`/ `url` param. This should be a closure that accepts JSON request and returns JSON response.
 
 ```perl
-	my $transport = sub ( Str :$json, Bool :$is_notification ) {
-		if :is_notification {
-			send_request_in_my_own_way_without_expecting_response( $request );
-			return;
-		}
-		else {
-			return send_request_in_my_own_way_and_obtain_response( $request );
-		}
+	sub transport ( Str :$json, Bool :$get_response ) {
+		return send_request_in_my_own_way_and_obtain_response_if_needed( $request );
 	}
 
-	my $client = JSON::RPC::Client.new( transport => $transport );
+	my $client = JSON::RPC::Client.new( transport => &transport );
 ```
 
-Your transport will be given extra param `is_notification` which informs it that request is a Notification or Batch of Notifications and response is not expected from the server.
+Your transport will be given extra param `get_response` which informs if response is expected from the server or not (for example in case of Notification or Batch of Notifications).
 
 **Server**
 

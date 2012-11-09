@@ -1,24 +1,22 @@
 use URI;
+use LWP::Simple;
 use JSON::Tiny;
 use JSON::RPC::Error;
 
 class JSON::RPC::Client;
 
 has Code $.transport is rw = die 'Transport is missing';
+
 has Code $.sequencer is rw = sub {
     state @pool = 'a' .. 'z', 'A' .. 'Z', 0 .. 9;
     
     return @pool.roll( 32 ).join( );
 };
 
-has Bool $!is_batch = False;
-has Bool $!is_notification = False;
+has Bool $.is_batch = False;
+has Bool $.is_notification = False;
 
 INIT {
-
-    # use ::(name) declarations instead of using meta in Rakudo 2012.10 with RT #115334 fix
-    $?PACKAGE.^add_method('rpc.batch', sub ( $object ) { return $object.clone( :is_batch ) } );
-    $?PACKAGE.^add_method('rpc.notification', sub ( $object ) { return $object.clone( :is_notification ) } );
 
     # install method auto dispatch
     $?PACKAGE.^add_fallback(
@@ -49,77 +47,38 @@ INIT {
     
 }
 
-multi submethod BUILD ( URI :$uri! ) {
+multi submethod BUILD ( URI :$uri!, Code :$sequencer? ) {
 
     $!transport = &transport.assuming( uri => $uri );
+	$!sequencer = $sequencer if $sequencer.defined;
 }
 
-multi submethod BUILD ( Str :$url! ) {
+multi submethod BUILD ( Str :$url!, Code :$sequencer? ) {
 
     $!transport = &transport.assuming( uri => URI.new( $url, :is_validating ) );
+	$!sequencer = $sequencer if $sequencer.defined;
 }
 
-multi submethod BUILD ( Code :$transport! ) {
+multi submethod BUILD ( Code :$transport!, Code :$sequencer? ) {
 
     $!transport = $transport;
+	$!sequencer = $sequencer if $sequencer.defined;
+}
+
+method ::('rpc.batch') {
+	return self.clone( :is_batch );
+}
+
+method ::('rpc.notification') {
+	return self.clone( :is_notification );
 }
 
 # TODO: Replace it with HTTP::Client in the future
-sub transport ( URI :$uri, Str :$json ) {
+sub transport ( URI :$uri, Str :$json, Bool :$get_response ) {
     
-    # wrap request in HTTP Request
-    my $request = 'POST ' ~ $uri.Str ~ ' HTTP/1.0' ~ "\x0D\x0A"
-        ~ 'Content-Type: application/json' ~ "\x0D\x0A"
-        ~ 'Content-Length: ' ~ $json.encode( 'UTF-8' ).bytes ~ "\x0D\x0A"
-        ~ "\x0D\x0A"
-        ~ $json;
-
-    # make new connection to server
-    # no keep-alive yet
-    my $connection = IO::Socket::INET.new( host => $uri.host, port => $uri.port );
-
-    # send request to server
-    $connection.send( $request );
-
-    # process status line
-    my ( $HTTP-Version, $Status-Code, $Reason-Phrase ) = $connection.get( ).comb( /\S+/ );
-
-    unless $Status-Code ~~ '200' {
-        $connection.close( );
-        JSON::RPC::TransportError.new( data => 'HTTP response is - ' ~ $Status-Code ~ ' ' ~ $Reason-Phrase ).throw;
-    }
-
-    my $body;
-    loop {
-        my $line = $connection.get( );
-
-        # line that ends header section
-        last if $line ~~ "\x0D";
-
-        # for now another headers are ignored
-        # they will be parsed properly after switch to HTTP::Transport
-        next unless $line ~~ m/:i ^ 'Content-Length:' <ws> (\d+) /;
-
-        # store body length
-        $body = $/[0];
-    }
-
-    # RFC 2616
-    # For compatibility with HTTP/1.0 applications, HTTP/1.1 requests
-    # containing a message-body MUST include a valid Content-Length header
-    # field unless the server is known to be HTTP/1.1 compliant.
-    unless $body {
-        $connection.close( );
-        JSON::RPC::TransportError.new( data => 'HTTP response has unknown body length' ).throw;
-    }
-
-    # receive message body 
-    $body = $connection.read( $body ).decode( );
-
-    # close connection with server, no keep-alive yet
-    $connection.close();
-    
-    return $body;
+	# HTTP protocol always have response
+	# so get_response flag is ignored
+	return LWP::Simple.post( ~$uri, { 'Content-Type' => 'application/json' }, $json );
 }
 
 method !handler( Str :$method!, :$params ) {
@@ -138,27 +97,38 @@ method !handler( Str :$method!, :$params ) {
     # An identifier established by the Client
     # that MUST contain a String, Number, or NULL value if included.
     # If it is not included it is assumed to be a notification.
-    %template{'id'} = self.sequencer.( ) unless $!is_notification;
+    %template{'id'} = self.sequencer.( ) unless $.is_notification;
 
     # A Structured value that holds the parameter values
     # to be used during the invocation of the method.
     # This member MAY be omitted.
     %template{'params'} = $params if $params.defined;
 
-
     my $request = to-json( %template );
-    my $response = $!transport.( json => $request );
+    my $response;
+	
+    # A Request object that is a Notification signifies
+    # the Client's lack of interest in the corresponding Response object
+	if $!is_notification {
+		$!transport.( json => $request, get_response => False );
+		return;
+	}
+	else {
+		$response = $!transport.( json => $request, get_response => True );
+	}
+    
     my %response = self.parse_json( $response );
     my $version = self.validate_response( |%response );
-
-    # check id of response
-    unless %template{'id'} eqv %response{'id'} {
-        JSON::RPC::TransportError.new( data => 'JSON RPC request id is different than response id' ).throw;
-    }
 
     # failed procedure call, throw exception
     if %response{'error'}.defined {
         self.bind_error( |%response{'error'} );
+    }
+
+    # This member is REQUIRED.
+    # It MUST be the same as the value of the id member in the Request Object.
+    unless %template{'id'} eqv %response{'id'} {
+        JSON::RPC::TransportError.new( data => 'JSON RPC request id is different than response id' ).throw;
     }
 
     # successful remote procedure call

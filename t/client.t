@@ -6,102 +6,197 @@ use JSON::RPC::Client;
 
 plan( 9 );
 
-my ($rpc, $case);
-
-# mocked handler for transport layer -
-# request produced by client is compared to request from specification exmaple
-# and then response from specification exmaple is returned
-sub transport ( Str :$json, Bool :$is_notification ) {
-    my $got         = from-json( $json );
-    my $expected    = from-json( $case[ 1 ] );
-    my $returned    = from-json( $case[ 2 ] );
-    
-    # request produced by client
-    # and request from specification example
-    # must be of the same type
-    die unless $got.WHAT === $expected.WHAT;
-    
-    # specification examples have fixed "id" members
-    # while client generates random values for "id" members in request
-    # so they have to be remapped in mocked transport response to avoid failure on mismatch
-    my %ids;
-    given $got {
-        when Hash {
-            %ids{ $expected.delete( 'id' ) } = $got.delete( 'id' ) if $got.exists( 'id' );
-        }
-    }
-    given $returned {
-        when Hash {
-            $returned{'id'} = %ids{ $returned{'id'} } if defined $returned{'id'};
-        }
-    }
-
-    # after id striping request produced by client
-    # and request from specification exmaple must match deeply
-    die unless $got eqv $expected;
-
-    # convert response from specification example
-    # with remapped "id" members back to JSON
-    return to-json( $returned );
-}
-
-$rpc = JSON::RPC::Client.new( transport => &transport );
+my ($rpc, $name);
 
 # Specification examples from L<http://www.jsonrpc.org/specification#examples>
 
-$case = [
+spec(
     'rpc call with positional parameters',
     '{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}',
-    '{"jsonrpc": "2.0", "result": 19, "id": 1}',
-];
-is $rpc.subtract( 42, 23 ), 19, $case[0];
+    '{"jsonrpc": "2.0", "result": 19, "id": 1}'
+);
+is $rpc.subtract( 42, 23 ), 19, $name;
 
-$case = [
+spec(
     'rpc call with positional parameters',
     '{"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 2}',
     '{"jsonrpc": "2.0", "result": -19, "id": 2}',
-];
-is $rpc.subtract( 23, 42 ), -19, $case[0];
+	ids => [ 2 ]
+);
+is $rpc.subtract( 23, 42 ), -19, $name;
 
-$case = [
+spec(
     'rpc call with named parameters',
     '{"jsonrpc": "2.0", "method": "subtract", "params": {"subtrahend": 23, "minuend": 42}, "id": 3}',
-    '{"jsonrpc": "2.0", "result": 19, "id": 3}'
-];
-is $rpc.subtract( subtrahend => 23, minuend => 42 ), 19, $case[0];
+    '{"jsonrpc": "2.0", "result": 19, "id": 3}',
+	ids => [ 3 ]
+);
+is $rpc.subtract( subtrahend => 23, minuend => 42 ), 19, $name;
 
-$case = [
+spec(
     'rpc call with named parameters',
     '{"jsonrpc": "2.0", "method": "subtract", "params": {"minuend": 42, "subtrahend": 23}, "id": 4}',
-    '{"jsonrpc": "2.0", "result": 19, "id": 4}'
-];
-is $rpc.subtract( subtrahend => 23, minuend => 42 ), 19, $case[0];
+    '{"jsonrpc": "2.0", "result": 19, "id": 4}',
+	ids => [ 4 ]
+);
+is $rpc.subtract( subtrahend => 23, minuend => 42 ), 19, $name;
 
-# NYI notification tests
+spec(
+    'a Notification',
+    '{"jsonrpc": "2.0", "method": "update", "params": [1,2,3,4,5]}',
+    Nil
+);
+is $rpc.'rpc.notification'( ).update( 1, 2, 3, 4, 5), Nil, $name;
 
-$case = [
+spec(
+    'a Notification',
+    '{"jsonrpc": "2.0", "method": "foobar"}',
+    Nil
+);
+is $rpc.'rpc.notification'( ).foobar( ), Nil, $name;
+
+spec(
     'rpc call of non-existent method',        
     '{"jsonrpc": "2.0", "method": "foobar", "id": "1"}',
-    '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "1"}'
-];
+    '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "1"}',
+	ids => [ "1" ]
+);
 try { $rpc.foobar( ) };
-isa_ok $!, JSON::RPC::MethodNotFound, $case[0];
+isa_ok $!, JSON::RPC::MethodNotFound, $name;
+
+spec(
+    'rpc call with invalid JSON',
+    '{"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]',
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
+	force => True
+);
+try { $rpc.dummy( ) };
+isa_ok $!, JSON::RPC::ParseError, $name;
+
+spec(
+    'rpc call with invalid Request object',
+    '{"jsonrpc": "2.0", "method": 1, "params": "bar"}',
+    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}',
+	force => True
+);
+try { $rpc.dummy( ) };
+isa_ok $!, JSON::RPC::InvalidRequest, $name;
 
 # NYI remainig tests
+# spec(
+#     'rpc call Batch, invalid JSON',
+#     '[
+#       {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+#       {"jsonrpc": "2.0", "method"
+#     ]',
+#     '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}'
+# );
+# 
+# spec(
+#     'rpc call with an empty Array',
+#     '[]',
+#     '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}'
+# );
+# 
+# spec(
+#     'rpc call with an invalid Batch (but not empty)',
+#     '[1]',
+#     '[
+#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+#     ]'
+# );
+# 
+# spec(
+#     'rpc call with invalid Batch',
+#     '[1,2,3]',
+#     '[
+#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
+#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
+#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+#     ]'
+# );
+# 
+# spec(
+#     'rpc call Batch',
+#     '[
+#         {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+#         {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
+#         {"jsonrpc": "2.0", "method": "subtract", "params": [42,23], "id": "2"},
+#         {"foo": "boo"},
+#         {"jsonrpc": "2.0", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
+#         {"jsonrpc": "2.0", "method": "get_data", "id": "9"} 
+#     ]',
+#     '[
+#         {"jsonrpc": "2.0", "result": 7, "id": "1"},
+#         {"jsonrpc": "2.0", "result": 19, "id": "2"},
+#         {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
+#         {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "5"},
+#         {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
+#     ]'
+# );
+# 
+# spec(
+#     'rpc call Batch (all notifications)',
+#     '[
+#         {"jsonrpc": "2.0", "method": "notify_sum", "params": [1,2,4]},
+#         {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]}
+#     ]',
+#     Nil # Nothing is returned for all notification batches
+# );
 
 # Other tests not covered by specification examples
 
-dies_ok {
-    JSON::RPC::Client.new( url => 'http:///X##y' )
-}, 'cannot initialize using incorrect URL';
+# dies_ok {
+#     JSON::RPC::Client.new( url => 'http:///X##y' )
+# }, 'cannot initialize using incorrect URL';
+# 
+# lives_ok {
+#     JSON::RPC::Client.new( url => 'http://rakudo.org' )
+# }, 'can initialize using correct URL';
+# 
+# lives_ok {
+#     $rpc = JSON::RPC::Client.new( uri => URI.new('http://rakudo.org') )
+# }, 'can initialize using URI object';
+# 
+# try { $rpc.ping( ) };
+# isa_ok $!, JSON::RPC::TransportError, 'live test';
 
-lives_ok {
-    JSON::RPC::Client.new( url => 'http://rakudo.org' )
-}, 'can initialize using correct URL';
 
-lives_ok {
-    $rpc = JSON::RPC::Client.new( uri => URI.new('http://rakudo.org') )
-}, 'can initialize using URI object';
+# mocked handlers for transport layer
 
-try { $rpc.ping( ) };
-isa_ok $!, JSON::RPC::TransportError, 'live test';
+# request produced by client is compared to request from specification exmaple
+# and then response from specification example is returned
+sub transport ( Str :$json, Bool :$get_response, :$data_sent_to_Server, :$data_sent_to_Client, :$force ) {
+
+	# sometimes request produced by client cannot mimic request from specification exmaple
+	# this may happen when parse error or invalid Request is expected
+	# in this case dummy call is ignored and response from specification example is returned
+	return $data_sent_to_Client if $force;
+
+	# request produced by client
+    # and request from specification example must match deeply
+    die unless from-json( $json ) eqv from-json( $data_sent_to_Server );
+		
+	return $data_sent_to_Client;
+}
+
+# mocked sequencer
+
+sub sequencer ( :@ids ) {
+
+	return @ids.shift;
+}
+
+sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$force = False, :@ids = [ 1 .. * ] ) {
+
+	$name = $description;
+	$rpc = JSON::RPC::Client.new(
+		transport => &transport.assuming( :$data_sent_to_Server, :$data_sent_to_Client, :$force ),
+		sequencer => &sequencer.assuming( :@ids )
+	);
+	
+	
+	
+
+}
+
