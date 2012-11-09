@@ -23,7 +23,7 @@ method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
         # dispatch remote procedure call
         my $response = self.handler( json => $request );
         
-        # on empty response return HTTP 200 as adviced in
+        # on empty response return HTTP 204 as adviced in
         # https://groups.google.com/forum/?fromgroups=#!topic/json-rpc/X7I2oxIOX8A
         return [ 204, [ ], [ ] ] unless $response;
         
