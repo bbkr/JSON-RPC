@@ -5,14 +5,8 @@ use JSON::RPC::Error;
 
 class JSON::RPC::Client;
 
-has Code $.transport is rw = die 'Transport is missing';
-
-has Code $.sequencer is rw = sub {
-    state @pool = 'a' .. 'z', 'A' .. 'Z', 0 .. 9;
-    
-    return @pool.roll( 32 ).join( );
-};
-
+has Code $!transport is rw;
+has Code $!sequencer is rw;
 has Bool $.is_batch = False;
 has Bool $.is_notification = False;
 
@@ -30,10 +24,13 @@ INIT {
             # placeholder variables cannot be passed-through
             # so dispatch has to be done manually depending on nature of passed params
             return method ( *%named, *@positional ) {
-                if ?%named {
+                if %named and @positional {
+                    die 'Cannot use named and positional params at the same time';
+                }
+                elsif %named {
                     return $object!handler( method => $name, params => %named );
                 }
-                elsif ?@positional {
+                elsif @positional {
                     return $object!handler( method => $name, params => @positional );
                 }
                 else {
@@ -50,19 +47,19 @@ INIT {
 multi submethod BUILD ( URI :$uri!, Code :$sequencer? ) {
 
     $!transport = &transport.assuming( uri => $uri );
-	$!sequencer = $sequencer if $sequencer.defined;
+	$!sequencer = $sequencer // &sequencer;
 }
 
 multi submethod BUILD ( Str :$url!, Code :$sequencer? ) {
 
     $!transport = &transport.assuming( uri => URI.new( $url, :is_validating ) );
-	$!sequencer = $sequencer if $sequencer.defined;
+	$!sequencer = $sequencer // &sequencer;
 }
 
 multi submethod BUILD ( Code :$transport!, Code :$sequencer? ) {
 
     $!transport = $transport;
-	$!sequencer = $sequencer if $sequencer.defined;
+	$!sequencer = $sequencer // &sequencer;
 }
 
 method ::('rpc.batch') {
@@ -81,6 +78,12 @@ sub transport ( URI :$uri, Str :$json, Bool :$get_response ) {
 	return LWP::Simple.post( ~$uri, { 'Content-Type' => 'application/json' }, $json );
 }
 
+sub sequencer {
+    state @pool = 'a' .. 'z', 'A' .. 'Z', 0 .. 9;
+    
+    return @pool.roll( 32 ).join( );
+}
+
 method !handler( Str :$method!, :$params ) {
 
     # Response object template
@@ -97,7 +100,7 @@ method !handler( Str :$method!, :$params ) {
     # An identifier established by the Client
     # that MUST contain a String, Number, or NULL value if included.
     # If it is not included it is assumed to be a notification.
-    %template{'id'} = self.sequencer.( ) unless $.is_notification;
+    %template{'id'} = $!sequencer.( ) unless $.is_notification;
 
     # A Structured value that holds the parameter values
     # to be used during the invocation of the method.
@@ -117,7 +120,7 @@ method !handler( Str :$method!, :$params ) {
 		$response = $!transport.( json => $request, get_response => True );
 	}
     
-    my %response = self.parse_json( $response );
+    my %response = self!parse_json( $response );
     my $version = self.validate_response( |%response );
 
     # failed procedure call, throw exception
@@ -135,7 +138,7 @@ method !handler( Str :$method!, :$params ) {
     return %response{'result'};
 }
 
-method parse_json ( Str $body ) {
+method !parse_json ( Str $body ) {
 
     my %parsed;
 
