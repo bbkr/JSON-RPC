@@ -23,15 +23,15 @@ INIT {
 
             # placeholder variables cannot be passed-through
             # so dispatch has to be done manually depending on nature of passed params
-            return method ( *%named, *@positional ) {
-                if %named and @positional {
-                    die 'Cannot use named and positional params at the same time';
-                }
-                elsif %named {
-                    return $object!handler( method => $name, params => %named );
+            return method ( *@positional, *%named ) {
+                if @positional  and %named {
+                    die 'Cannot use positional and named params at the same time';
                 }
                 elsif @positional {
                     return $object!handler( method => $name, params => @positional );
+                }
+                elsif %named {
+                    return $object!handler( method => $name, params => %named );
                 }
                 else {
                     return $object!handler( method => $name );

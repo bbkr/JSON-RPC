@@ -4,7 +4,7 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Client;
 
-plan( 10 );
+plan( 11 );
 
 my ($rpc, $name);
 
@@ -161,6 +161,13 @@ isa_ok $!, JSON::RPC::InvalidRequest, $name;
 # try { $rpc.ping( ) };
 # isa_ok $!, JSON::RPC::TransportError, 'live test';
 
+spec(
+    'params member omitted when no params passed',
+    '{"jsonrpc": "2.0", "method": "ping", "id": 1}',
+    '{"jsonrpc": "2.0", "result": "pong", "id": 1}'
+);
+is $rpc.ping( ), 'pong', $name;
+
 dies_ok { $rpc.subtract( 23, minuend => 42 ) },
     'cannot use positional and named params at the same time';
 
@@ -178,7 +185,7 @@ sub transport ( Str :$json, Bool :$get_response, :$data_sent_to_Server, :$data_s
 
 	# request produced by client
     # and request from specification example must match deeply
-    die unless from-json( $json ) eqv from-json( $data_sent_to_Server );
+	die unless from-json( $json ) eqv from-json( $data_sent_to_Server );
 		
 	return $data_sent_to_Client;
 }
