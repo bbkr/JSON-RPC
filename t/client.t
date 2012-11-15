@@ -4,7 +4,7 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Client;
 
-plan( 9 );
+plan( 10 );
 
 my ($rpc, $name);
 
@@ -46,7 +46,7 @@ spec(
     '{"jsonrpc": "2.0", "method": "update", "params": [1,2,3,4,5]}',
     Nil
 );
-is $rpc.'rpc.notification'( ).update( 1, 2, 3, 4, 5), Nil, $name;
+is $rpc.'rpc.notification'( ).update( 1, 2, 3, 4, 5 ), Nil, $name;
 
 spec(
     'a Notification',
@@ -160,6 +160,9 @@ isa_ok $!, JSON::RPC::InvalidRequest, $name;
 # 
 # try { $rpc.ping( ) };
 # isa_ok $!, JSON::RPC::TransportError, 'live test';
+
+dies_ok { $rpc.subtract( 23, minuend => 42 ) },
+    'cannot use positional and named params at the same time';
 
 
 # mocked handlers for transport layer
