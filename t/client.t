@@ -4,7 +4,7 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Client;
 
-plan( 11 );
+plan( 16 );
 
 my ($rpc, $name);
 
@@ -82,22 +82,29 @@ spec(
 try { $rpc.dummy( ) };
 isa_ok $!, JSON::RPC::InvalidRequest, $name;
 
-# NYI remainig tests
-# spec(
-#     'rpc call Batch, invalid JSON',
-#     '[
-#       {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
-#       {"jsonrpc": "2.0", "method"
-#     ]',
-#     '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}'
-# );
-# 
-# spec(
-#     'rpc call with an empty Array',
-#     '[]',
-#     '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}'
-# );
-# 
+spec(
+    'rpc call Batch, invalid JSON',
+    '[
+      {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+      {"jsonrpc": "2.0", "method"
+    ]',
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
+	force => True
+);
+try {
+	$rpc.'rpc.batch'( ).dummy( );
+	$rpc.'rpc.flush'( );
+};
+isa_ok $!, JSON::RPC::ParseError, $name;
+
+spec(
+    'rpc call with an empty Array',
+    '[]',
+    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}'
+);
+try { $rpc.'rpc.flush'( ) };
+isa_ok $!, JSON::RPC::InvalidRequest, $name;
+
 # spec(
 #     'rpc call with an invalid Batch (but not empty)',
 #     '[1]',
@@ -134,15 +141,18 @@ isa_ok $!, JSON::RPC::InvalidRequest, $name;
 #         {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
 #     ]'
 # );
-# 
-# spec(
-#     'rpc call Batch (all notifications)',
-#     '[
-#         {"jsonrpc": "2.0", "method": "notify_sum", "params": [1,2,4]},
-#         {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]}
-#     ]',
-#     Nil # Nothing is returned for all notification batches
-# );
+
+spec(
+    'rpc call Batch (all notifications)',
+    '[
+        {"jsonrpc": "2.0", "method": "notify_sum", "params": [1,2,4]},
+        {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]}
+    ]',
+    Nil # Nothing is returned for all notification batches
+);
+is $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_sum( 1, 2, 4 ), Nil, $name ~ ' stack';
+is $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 ), Nil, $name ~ ' stack';
+is $rpc.'rpc.flush'(), Nil, $name ~ ' flush';
 
 # Other tests not covered by specification examples
 

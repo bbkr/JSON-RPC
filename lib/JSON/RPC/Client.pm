@@ -9,6 +9,8 @@ has Code $!transport is rw;
 has Code $!sequencer is rw;
 has Bool $.is_batch = False;
 has Bool $.is_notification = False;
+has @!stack = ();
+has $!accumulator = Any;
 
 INIT {
 
@@ -70,6 +72,58 @@ method ::('rpc.notification') {
 	return self.clone( :is_notification );
 }
 
+method ::('rpc.flush') {
+
+    my $request = to-json( @!stack );
+    my $response;
+    
+    # There is at least one Request in Batch that is not a Notification.
+    if grep { .exists( 'id' ) }, @!stack {
+        $response = $!transport.( json => $request, get_response => True );
+    }
+    # If the batch rpc call itself fails to be recognized (...)
+    # as an Array with at least one value,
+    # the response from the Server MUST be a single Response object.
+    # (allowing user to produce Invalid Request on empty Batch is less evil
+    # than silent skip which may be confused with valid Batch containing Notifications only)
+    elsif not @!stack.elems {
+        $response = $!transport.( json => $request, get_response => True );
+    }
+    # If there are no Response objects contained within the Response array
+    # as it is to be sent to the client, the server MUST NOT return an empty Array
+    # and should return nothing at all.
+    else {
+        $!transport.( json => $request, get_response => False );
+        @!stack = ();
+        return;
+    }
+
+    $response = self!parse_json( $response );
+    
+    given $response {
+        when Hash {
+            my $version = self.validate_response( |$response );
+
+            # Failed whole batch call, throw exception.
+            if $response{'error'}.defined {
+                self.bind_error( |$response{'error'} );
+            }
+            # Batch Request cannot receive single Response object that is not an error.
+            else {
+                JSON::RPC::TransportError.new( data => 'JSON RPC Batch received single Response that is not a failure' ).throw;
+            }
+        }
+        when Array {
+            # TODO response binding
+        }
+    }
+    
+    # Clear Requests stack.
+    # It also informs next batch call
+    # to initialize new accumulator for Responses.
+    @!stack = ();
+}
+
 # TODO: Replace it with HTTP::Client in the future
 sub transport ( URI :$uri, Str :$json, Bool :$get_response ) {
     
@@ -86,8 +140,8 @@ sub sequencer {
 
 method !handler( Str :$method!, :$params ) {
 
-    # Response object template
-    my %template = (
+    # Request object
+    my %request = (
 
         # A String specifying the version of the JSON-RPC protocol.
         # MUST be exactly "2.0".
@@ -100,14 +154,38 @@ method !handler( Str :$method!, :$params ) {
     # An identifier established by the Client
     # that MUST contain a String, Number, or NULL value if included.
     # If it is not included it is assumed to be a notification.
-    %template{'id'} = $!sequencer.( ) unless $.is_notification;
+    %request{'id'} = $!sequencer.( ) unless $.is_notification;
 
     # A Structured value that holds the parameter values
     # to be used during the invocation of the method.
     # This member MAY be omitted.
-    %template{'params'} = $params if $params.defined;
+    %request{'params'} = $params if $params.defined;
 
-    my $request = to-json( %template );
+	# Requests in Batch are not processed until rpc.flush method is called.
+	if $.is_batch {
+		
+		# On empty Requests stack (first Batch or after flushing)
+		# initialize new accumulator for Responses.
+		unless @!stack.elems {
+			my @accumulator;
+			$!accumulator = @accumulator;
+		}
+		
+		@!stack.push( { %request } );
+		
+		# The Server MUST NOT reply to a Notification,
+		# including those that are within a batch request.
+		return if $.is_notification;
+		
+		# If Request is not a Notification then closure is returned
+		# that will allow easy access to Response matched by id member.
+		my $position = $!accumulator.elems;
+		$!accumulator[ $position ] = Any;
+
+		return sub { $!accumulator[ $position ] };
+	}
+
+    my $request = to-json( %request );
     my $response;
 	
     # A Request object that is a Notification signifies
@@ -130,7 +208,7 @@ method !handler( Str :$method!, :$params ) {
 
     # This member is REQUIRED.
     # It MUST be the same as the value of the id member in the Request Object.
-    unless %template{'id'} eqv %response{'id'} {
+    unless %request{'id'} eqv %response{'id'} {
         JSON::RPC::TransportError.new( data => 'JSON RPC request id is different than response id' ).throw;
     }
 
@@ -140,13 +218,14 @@ method !handler( Str :$method!, :$params ) {
 
 method !parse_json ( Str $body ) {
 
-    my %parsed;
+    my $parsed;
 
-    try { %parsed = from-json( $body ); };
+    try { $parsed = from-json( $body ); };
 
-    JSON::RPC::TransportError.new( data => 'JSON parsing failed - ' ~ $! ).throw if defined $!;
+    JSON::RPC::TransportError.new( data => ~$! ).throw if defined $!;
+    JSON::RPC::TransportError.new.throw unless $parsed ~~ Array|Hash;
 
-    return %parsed;
+    return $parsed;
 }
 
 multi method validate_response (
