@@ -4,9 +4,9 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Client;
 
-plan( 16 );
+plan( 53 );
 
-my ($rpc, $name);
+my ($rpc, $name, @responses);
 
 # Specification examples from L<http://www.jsonrpc.org/specification#examples>
 
@@ -59,7 +59,7 @@ spec(
     'rpc call of non-existent method',        
     '{"jsonrpc": "2.0", "method": "foobar", "id": "1"}',
     '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "1"}',
-	ids => [ "1" ]
+	ids => [ '1' ]
 );
 try { $rpc.foobar( ) };
 isa_ok $!, JSON::RPC::MethodNotFound, $name;
@@ -105,42 +105,73 @@ spec(
 try { $rpc.'rpc.flush'( ) };
 isa_ok $!, JSON::RPC::InvalidRequest, $name;
 
-# spec(
-#     'rpc call with an invalid Batch (but not empty)',
-#     '[1]',
-#     '[
-#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
-#     ]'
-# );
-# 
-# spec(
-#     'rpc call with invalid Batch',
-#     '[1,2,3]',
-#     '[
-#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-#       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
-#     ]'
-# );
-# 
-# spec(
-#     'rpc call Batch',
-#     '[
-#         {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
-#         {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
-#         {"jsonrpc": "2.0", "method": "subtract", "params": [42,23], "id": "2"},
-#         {"foo": "boo"},
-#         {"jsonrpc": "2.0", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
-#         {"jsonrpc": "2.0", "method": "get_data", "id": "9"} 
-#     ]',
-#     '[
-#         {"jsonrpc": "2.0", "result": 7, "id": "1"},
-#         {"jsonrpc": "2.0", "result": 19, "id": "2"},
-#         {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-#         {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "5"},
-#         {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
-#     ]'
-# );
+spec(
+    'rpc call with an invalid Batch (but not empty)',
+    '[1]',
+    '[
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+    ]',
+    force => True
+);
+isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
+lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+try { ~@responses[ 0 ] };
+isa_ok $!, JSON::RPC::InvalidRequest, $name ~ ' validate';
+
+spec(
+    'rpc call with invalid Batch',
+    '[1,2,3]',
+    '[
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+    ]',
+    force => True
+);
+isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
+lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+try { ~@responses[ 0 ] };
+isa_ok $!, JSON::RPC::InvalidRequest, $name ~ ' validate';
+try { ~@responses[ 1 ] };
+isa_ok $!, JSON::RPC::InvalidRequest, $name ~ ' validate';
+try { ~@responses[ 2 ] };
+isa_ok $!, JSON::RPC::InvalidRequest, $name ~ ' validate';
+
+spec(
+    'rpc call Batch',
+    '[
+        {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+        {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
+        {"jsonrpc": "2.0", "method": "subtract", "params": [42,23], "id": "2"},
+        {"foo": "boo"},
+        {"jsonrpc": "2.0", "method": "foo.get", "params": {"name": "myself"}, "id": "5"},
+        {"jsonrpc": "2.0", "method": "get_data", "id": "9"} 
+    ]',
+    '[
+        {"jsonrpc": "2.0", "result": 7, "id": "1"},
+        {"jsonrpc": "2.0", "result": 19, "id": "2"},
+        {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
+        {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "5"},
+        {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
+    ]',
+    ids => [ '1', '2', Any:U, '5', '9' ], force => True
+);
+isa_ok $rpc.'rpc.batch'( ).sum( 1, 2, 4 ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).subtract( 42, 23 ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).'foo.get'( name => 'myself' ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).get_data( ), Nil, $name ~ ' stack';
+lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+is @responses[ 0 ], 7, $name ~ ' validate';
+is @responses[ 1 ], 19, $name ~ ' validate';
+try { ~@responses[ 2 ] };
+isa_ok $!, JSON::RPC::InvalidRequest, $name ~ ' validate';
+try { ~@responses[ 3 ] };
+isa_ok $!, JSON::RPC::MethodNotFound, $name ~ ' validate';
+is_deeply @responses[ 4 ], [ 'hello', 5 ], $name ~ ' validate';
 
 spec(
     'rpc call Batch (all notifications)',
@@ -150,26 +181,26 @@ spec(
     ]',
     Nil # Nothing is returned for all notification batches
 );
-is $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_sum( 1, 2, 4 ), Nil, $name ~ ' stack';
-is $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 ), Nil, $name ~ ' stack';
-is $rpc.'rpc.flush'(), Nil, $name ~ ' flush';
+isa_ok $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_sum( 1, 2, 4 ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.flush'(), Nil, $name ~ ' flush';
 
 # Other tests not covered by specification examples
 
-# dies_ok {
-#     JSON::RPC::Client.new( url => 'http:///X##y' )
-# }, 'cannot initialize using incorrect URL';
-# 
-# lives_ok {
-#     JSON::RPC::Client.new( url => 'http://rakudo.org' )
-# }, 'can initialize using correct URL';
-# 
-# lives_ok {
-#     $rpc = JSON::RPC::Client.new( uri => URI.new('http://rakudo.org') )
-# }, 'can initialize using URI object';
-# 
-# try { $rpc.ping( ) };
-# isa_ok $!, JSON::RPC::TransportError, 'live test';
+dies_ok {
+    JSON::RPC::Client.new( url => 'http:///X##y' )
+}, 'cannot initialize using incorrect URL';
+
+lives_ok {
+    JSON::RPC::Client.new( url => 'http://rakudo.org' )
+}, 'can initialize using correct URL';
+
+lives_ok {
+    $rpc = JSON::RPC::Client.new( uri => URI.new('http://rakudo.org') )
+}, 'can initialize using URI object';
+
+try { $rpc.ping( ) };
+isa_ok $!, JSON::RPC::TransportError, 'live test';
 
 spec(
     'params member omitted when no params passed',
@@ -178,9 +209,51 @@ spec(
 );
 is $rpc.ping( ), 'pong', $name;
 
-dies_ok { $rpc.subtract( 23, minuend => 42 ) },
-    'cannot use positional and named params at the same time';
+spec(
+    'null id is allowed',
+    '{"jsonrpc": "2.0", "method": "ping", "id": null}',
+    '{"jsonrpc": "2.0", "result": "pong", "id": null}',
+    ids => [ Any:U ]
+);
+is $rpc.ping( ), 'pong', $name;
 
+spec(
+    'not ordered Batch',
+    '[
+        {"jsonrpc": "2.0", "method": "ping", "id": 1},
+        {"jsonrpc": "2.0", "method": "pong", "id": 2}
+    ]',
+    '[
+        {"jsonrpc": "2.0", "result": "ping", "id": 2},
+        {"jsonrpc": "2.0", "result": "pong", "id": 1}
+    ]'
+);
+isa_ok $rpc.'rpc.batch'( ).ping( ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).pong( ), Nil, $name ~ ' stack';
+lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+is @responses[ 0 ], 'pong', $name ~ ' validate';
+is @responses[ 1 ], 'ping', $name ~ ' validate';
+
+spec(
+    'duplicated id in Batch',
+    '[
+        {"jsonrpc": "2.0", "method": "ping", "id": 1},
+        {"jsonrpc": "2.0", "method": "pong", "id": 1}
+    ]',
+    '[
+        {"jsonrpc": "2.0", "result": "pong", "id": 1},
+        {"jsonrpc": "2.0", "result": "ping", "id": 1}
+    ]',
+    ids => [ 1, 1 ]
+);
+isa_ok $rpc.'rpc.batch'( ).ping( ), Nil, $name ~ ' stack';
+isa_ok $rpc.'rpc.batch'( ).pong( ), Nil, $name ~ ' stack';
+lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+is @responses[ 0 ], 'pong', $name ~ ' validate';
+is @responses[ 1 ], 'ping', $name ~ ' validate';
+
+try { $rpc.subtract( 23, minuend => 42 ) };
+isa_ok $!, JSON::RPC::ProtocolError, 'cannot use positional and named params at the same time';
 
 # mocked handlers for transport layer
 
@@ -214,9 +287,5 @@ sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$force = F
 		transport => &transport.assuming( :$data_sent_to_Server, :$data_sent_to_Client, :$force ),
 		sequencer => &sequencer.assuming( :@ids )
 	);
-	
-	
-	
-
 }
 

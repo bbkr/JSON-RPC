@@ -55,7 +55,7 @@ method handler ( Str :$json! ) {
 
         my @requests;
         if $parsed ~~ Array {
-            # To send several Request objects at the same time,
+            # SPEC: To send several Request objects at the same time,
             # the Client MAY send an Array filled with Request objects.
             # INFO: empty Array is not valid request
             JSON::RPC::InvalidRequest.new.throw unless $parsed.elems;
@@ -84,8 +84,16 @@ method handler ( Str :$json! ) {
                 }
                 
                 my $method      = self!search_method( $request{'method'} );
-                my $candidate   = self!validate_params( $method, $request{'params'} );
-                my $result      = self!call( $candidate, $request{'params'} );
+				
+				my $result;
+				if $request.exists( 'params' ) {
+					my $candidate 	= self!validate_params( $method, self.application, |$request{'params'} );
+					$result      	= self!call( $candidate, self.application, |$request{'params'} );
+				}
+				else {
+					my $candidate 	= self!validate_params( $method, self.application );
+					$result      	= self!call( $candidate, self.application );
+				}
                 
                 # The Server MUST NOT reply to a Notification,
                 # including those that are within a batch request.
@@ -204,14 +212,10 @@ method !search_method ( Str $name ) {
     return $method;
 }
 
-method !validate_params ( Routine $method, $params is copy ) {
-
-    # lack of "params" member is allowed
-    # but Any is not flattenable
-    $params //= [ ];
+method !validate_params ( Routine $method, |params ) {
 
     # find all method candidates that recognize passed params
-    my @candidates = $method.candidates_matching( self.application, |$params );
+    my @candidates = $method.cando( params );
 
     JSON::RPC::InvalidParams.new.throw unless @candidates;
 
@@ -220,18 +224,15 @@ method !validate_params ( Routine $method, $params is copy ) {
     return @candidates.shift;
 }
 
-method !call ( Method $candidate, $params is copy ) {
+method !call ( Method $candidate, |params ) {
 
     my $result;
 
-    # lack of "params" member is allowed
-    # but Any is not flattenable
-    $params //= [ ];
-
     try {
-        $result = $candidate.( self.application, |$params );
+        $result = $candidate( |params );
 
         CATCH {
+
             # wrap unhandled error type as internal error
             when not $_ ~~ JSON::RPC::Error {
                 JSON::RPC::InternalError.new( data => .Str ).throw;
