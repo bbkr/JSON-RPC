@@ -10,5 +10,5 @@
     "description": "JSON-RPC 2.0 client and server", 
     "name": "JSON::RPC", 
     "source-url": "git://github.com/bbkr/jsonrpc.git", 
-    "version": "0.12.0"
+    "version": "0.13.0"
 }
