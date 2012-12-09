@@ -91,20 +91,11 @@ class JSON::RPC::InternalError does JSON::RPC::Error {
 
 }
 
-# transport error
-class JSON::RPC::TransportError does JSON::RPC::Error {
-
-    method new ( :$data ) {
-        self.bless( *, code => -32300, message => 'Transport error.', data => $data );
-    }
-
-}
-
 # protocol error
 class JSON::RPC::ProtocolError does JSON::RPC::Error {
 
     method new ( :$message, :$data ) {
-        self.bless( *, code => -32000, message => $message, data => $data );
+        self.bless( *, code => -32000, message => $message // 'Protocol Error.', data => $data );
     }
 
 }

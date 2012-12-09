@@ -209,7 +209,7 @@ lives_ok {
 }, 'can initialize using URI object';
 
 try { $rpc.ping( ) };
-isa_ok $!, JSON::RPC::TransportError, 'live test';
+isa_ok $!, JSON::RPC::ProtocolError, 'live test';
 
 spec(
     'params member omitted when no params passed',

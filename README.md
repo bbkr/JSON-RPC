@@ -68,7 +68,7 @@ There are 4 specs of JSON-RPC published so far:
 * [1.0](http://json-rpc.org/wiki/specification) - Not implemented. Does not support named params, error objects or batch requests and has different way of handling notifications compared to current spec. It is rarely used nowadays and because of that there are no plans to implement it, however contributions are welcome if someone wants to add backward compatibility.
 * [1.1](http://json-rpc.org/wd/JSON-RPC-1-1-WD-20060807.html) - Rejected. This working draft forces error reporting through HTTP codes making whole communication transport-dependent.
 * [1.2](http://jsonrpc.org/historical/jsonrpc12_proposal.html) - Proposal of 2.0 (see below).
-* [2.0](http://www.jsonrpc.org/specification) - Almost fully implemented. Notifications and batches are on TODO list.
+* [2.0](http://www.jsonrpc.org/specification) - Fully implemented!
 
 ### Can I use URI object to initialize client?
 
@@ -151,7 +151,7 @@ Pass `transport` param to `new( )` instead of `uri`/ `url` param. This should be
 		return send_request_in_my_own_way_and_obtain_response_if_needed( $request );
 	}
 
-	my $client = JSON::RPC::Client.new( transport => &transport );
+	my $client = JSON::RPC::Client.new( transport => &transport, url => ... );
 ```
 
 Your transport will be given extra param `get_response` which informs if response is expected from the server or not (for example in case of Notification or Batch of Notifications).
@@ -194,7 +194,7 @@ Errors defined in 2.0 spec are represented by `JSON::RPC::Error` exceptions:
 * `JSON::RPC::MethodNotFound` - The method does not exist in server handler application.
 * `JSON::RPC::InvalidParams` - Invalid method parameters, no handler candidates with matching signature found.
 * `JSON::RPC::InternalError` - Remote method died.
-* `JSON::RPC::TransportError` - Client specific error that may happen on transport layer.
+* `JSON::RPC::ProtocolError` - Other deviation from specification.
 
 Every exception has numeric `code` attribute that indicates the error type that occurred, text `message` attribute that provides a short description of the error and optional `data` attribute that contains additional information about the error.
 
