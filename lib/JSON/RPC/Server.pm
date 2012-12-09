@@ -252,3 +252,13 @@ method !call ( Method $candidate, |params ) {
 
     return $result;
 }
+
+=begin pod
+
+=TITLE class JSON::RPC::Server
+
+Server implementing JSON-RPC 2.0 protocol.
+
+Please check online documentation at L<https://github.com/bbkr/jsonrpc>.
+
+=end pod
