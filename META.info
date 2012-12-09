@@ -7,8 +7,9 @@
         "HTTP::Easy", 
         "LWP::Simple"
     ], 
-    "description": "JSON-RPC 2.0 client and server", 
+    "description": "JSON-RPC 2.0 client and server.", 
     "name": "JSON::RPC", 
+    "repo-type": "git", 
     "source-url": "git://github.com/bbkr/jsonrpc.git", 
     "version": "0.13.0"
 }
