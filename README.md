@@ -2,8 +2,8 @@
 
 Supports [2.0 specification](http://www.jsonrpc.org/specification).
 
-Compatible with Perl 6 [Rakudo](http://rakudo.org/) 2012.10+,
-included in [Rakudo Star](https://github.com/rakudo/star) 2012.04+.
+Compatible with Perl 6 [Rakudo](http://rakudo.org/) 2012.11+,
+included in [Rakudo Star](https://github.com/rakudo/star) since 2012.04.
 
 ## CLIENT
 
@@ -70,7 +70,7 @@ There are 4 specs of JSON-RPC published so far:
 * [1.2](http://jsonrpc.org/historical/jsonrpc12_proposal.html) - Proposal of 2.0 (see below).
 * [2.0](http://www.jsonrpc.org/specification) - Almost fully implemented. Notifications and batches are on TODO list.
 
-### Can I use URI object to initialize client
+### Can I use URI object to initialize client?
 
 Use `uri` param in constructor.
 
@@ -185,7 +185,7 @@ For example code `204 No Content` should be used in HTTP transport.
     JSON::RPC::Server.new( application => My::App ).run( :debug );
 ```
 
-### Error handling
+### How to implement Error handling?
 
 Errors defined in 2.0 spec are represented by `JSON::RPC::Error` exceptions:
 
@@ -254,6 +254,69 @@ And use them in application handler.
     method treasure {
         My::Error.new.throw;
     }
+```
+
+### How to make Notification call?
+
+Method `'rpc.notification'( )` puts client in notification context.
+Note that this method contains dot in name and it must be quoted.
+
+```perl
+	$client.'rpc.notification'( ).heartbeat( ); # no response from this one
+	say $client.ping( ) # regular call again
+```
+
+You can save client context to avoid typing.
+
+```perl
+	my $n = $client.'rpc.notification'( );
+	for ^1024 {
+		$n.heartbeat( ); # no responses from those
+	}
+```
+
+### How to make Batch call?
+
+Method `'rpc.batch'( )` puts client in batch context while method `'rpc.flush'( )` sends Requests.
+
+```perl
+	$client.'rpc.batch'( ).add( 2, 2 );
+	$client.'rpc.batch'( ).'rpc.notification'( ).heartbeat( );
+	$client.'rpc.batch'( ).suicide( );
+
+	for $client.'rpc.flush'( ) -> $response {
+		try {
+			$response.say;
+			CATCH {
+				when JSON::RPC::Error {
+					say 'Oops! ', .message;
+				}
+			}
+		}
+	}
+
+	# Output:
+	# 4
+	# Opps! Suicide served.
+```
+
+Important things to remember:
+
+* Server may process methods in Batch in any order and with any width of parallelism.
+* Client will sort responses to match order in which methods were stacked.
+* Notifications do not have corresponding response.
+* Batch containing only Notifications will return Nil on flush.
+* Attempt to flush empty Batch will result in `JSON::RPC::InvalidRequest` exception.
+* Individual exceptions are returned as Failures, thrown when called in sink context.
+
+You can save client context to avoid typing.
+
+```perl
+	my $b = $client.'rpc.batch'( );
+	for ^1024 {
+		$b.is_prime( $_ );
+	}
+	my @responses = $b.'rpc.flush'( );
 ```
 
 ## LICENSE

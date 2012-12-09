@@ -17,7 +17,7 @@ INIT {
     $?PACKAGE.^add_fallback(
 
         # must return True or False to indicate if it can handle the fallback
-        sub ( $object, $name ) { return True },
+        sub ( $object, $name ) { return True unless $name ~~ /^rpc\./ },
     
         # should return the Code object to invoke
         sub ( $object, $name ) {
@@ -42,7 +42,6 @@ INIT {
             };
 
         }
-
     );
     
 }
@@ -124,22 +123,21 @@ method !handler( Str :$method!, :$params ) {
 		$response = $!transport( json => $request, get_response => True );
 	}
     
-    my %response = self!parse_json( $response );
-    my $version = self.validate_response( |%response );
+    $response = self!parse_json( $response );
+    my $out = self!validate_response( $response );
 
-    # Failed procedure call, throw exception.
-    if %response{'error'}.defined {
-        self.bind_error( |%response{'error'} ).throw;
-    }
+    # failed procedure call, throw exception.
+    $out.throw if $out ~~ JSON::RPC::Error;
 
     # SPEC: This member is REQUIRED.
     # It MUST be the same as the value of the id member in the Request Object.
-    unless %request{'id'} eqv %response{'id'} {
-        JSON::RPC::TransportError.new( data => 'JSON RPC request id is different than response id' ).throw;
-    }
+    JSON::RPC::ProtocolError.new(
+		message => 'Request id is different than response id.',
+		data => { 'request' => %request, 'response' => $response }
+	).throw unless %request{'id'} eqv $response{'id'};
 
     # successful remote procedure call
-    return %response{'result'};
+    return $out;
 }
 
 method ::('rpc.batch') {
@@ -183,7 +181,11 @@ method ::('rpc.flush') {
 	# throw Exception if Server was unable to process Batch
 	# and returned single Response object with error
 	if $responses ~~ Hash {
-		self.bind_error( |$responses{'error'} ).throw;
+		self!bind_error( $responses{'error'} ).throw;
+	}
+	
+	for $responses.list -> $response {
+		$response{'out'} = self!validate_response( $response );
 	}
 	
     # SPEC: A Response object SHOULD exist for each Request object,
@@ -208,9 +210,9 @@ method ::('rpc.flush') {
 				if $subposition;
 			
 			# extract relevant part of Response
-			$responses[ $position ] = $response.exists( 'error' )
-			    ?? Failure.new( self.bind_error( |$response{'error'} ) )
-			    !! $response{'result'};
+			$responses[ $position ] = ( $response{'out'} ~~ JSON::RPC::Error )
+			    ?? Failure.new( $response{'out'} )
+			    !! $response{'out'};
 			
 			$found = True;
 			
@@ -221,14 +223,14 @@ method ::('rpc.flush') {
 		
         # if Response was not found by id member it must be Invalid Request error
         for $responses[ $position .. * ].kv -> $subposition, $response {
-            my $error = self.bind_error( |$response{'error'} );
-            next unless $error ~~ JSON::RPC::InvalidRequest;
+            
+            next unless $response{'out'} ~~ JSON::RPC::InvalidRequest;
             
 			# swap Responses at position being checked and desired position if not already in place
 			$responses[ $position, $position + $subposition ] = $responses[ $position + $subposition, $position ]
 				if $subposition;
 			
-			$responses[ $position ] = Failure.new( $error );
+			$responses[ $position ] = Failure.new( $response{'out'} );
 			
 			$found = True;
 			
@@ -236,10 +238,16 @@ method ::('rpc.flush') {
         }
         
         JSON::RPC::ProtocolError.new(
-            message => 'Cannot match contect between Requests and Responses in Batch.',
+            message => 'Cannot match context between Requests and Responses in Batch.',
             data => { 'requests' => @!stack, 'responses' => $responses }
         ).throw unless $found;
 		
+		LAST {
+	        JSON::RPC::ProtocolError.new(
+	            message => 'Amount of Responses in Batch higher than expected',
+	            data => { 'requests' => @!stack, 'responses' => $responses }
+	        ).throw if $position != $responses.elems - 1;
+		}
     }
     
     # clear Requests stack
@@ -260,85 +268,88 @@ method !parse_json ( Str $body ) {
     return $parsed;
 }
 
-multi method validate_response (
+method !validate_response ( $response ) {
+    
+	# SPEC: Response object
+	# When a rpc call is made, the Server MUST reply with a Response,
+	# except for in the case of Notifications.
+	# The Response is expressed as a single JSON Object, with the following members:
+	
+	# SPEC: A String specifying the version of the JSON-RPC protocol.
+    # MUST be exactly "2.0".
+    subset MemberJSONRPC of Str where '2.0';
+	
+	# SPEC: This member is REQUIRED on success.
+	# This member MUST NOT exist if there was an error invoking the method.
+	subset MemberResult of Any;
+	
+	# SPEC: This member is REQUIRED on error.
+	# This member MUST NOT exist if there was no error triggered during invocation.
+	# (explained in "5.1 Error object", validated later)
+	subset MemberError of Hash;
+	
+    # SPEC: This member is REQUIRED.
+	# It MUST be the same as the value of the id member in the Request Object.
+    subset MemberID where Str|Int|Rat|Num|Any:U;
 
-    # A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0".
-    Str :$jsonrpc! where '2.0',
-
-    # This member is REQUIRED on success.
-    # This member MUST NOT exist if there was an error invoking the method.
-    # INFO: as explained in RT 109182 lack of presence cannot be tested in signature
-    # so "result":null is incorrectly assumed to be to be valid -
-    # this is not dangerous because upper logic can recognize this case
-    # HACK: mutually exclusive error and result members are checked later
-    :$result?,
-
-    # This member is REQUIRED on error.
-    # This member MUST NOT exist if there was no error triggered during invocation.
-    # INFO: as explained in RT 109182 lack of presence cannot be tested in signature
-    # so "error":null is incorrectly assumed to be to be valid -
-    # this is not dangerous because upper logic can recognize this case
-    :$error? where {
-        # test if error and result params are mutually exclusive
-        # this check is performed even if error is not given
-        ( $result.defined xor $error.defined )
-        # INFO: error format is checked later
-    },
-
-    # This member is REQUIRED.
-    # It MUST be the same as the value of the id member in the Request Object.
-    # INFO: comparison with request id is on upper level 
-    :$id!
-) {
-    # spec version number
-    return 2.0;
+	given $response {
+		when :( MemberJSONRPC :$jsonrpc!, MemberResult :$result!, MemberID :$id! ) {
+			return $response{'result'};
+		}
+		when :( MemberJSONRPC :$jsonrpc!, MemberError :$error!, MemberID :$id! ) {
+			return self!bind_error( $response{'error'} );
+		}
+		default {
+			JSON::RPC::ProtocolError.new(
+				message => 'Invalid Response.',
+				data => $response
+			).throw;
+		}
+	}
 }
 
-multi method validate_response {
+method !bind_error ( $error ) {
 
-    # none of above spec signatures claimed protocol version number
-    JSON::RPC::TransportError.new( data => 'JSON-RPC Response Object is not valid' ).throw;
-}
+	# SPEC: Error object
+	# When a rpc call encounters an error,
+	# the Response Object MUST contain the error member
+	# with a value that is a Object with the following members:
+			
+	# SPEC: A Number that indicates the error type that occurred.
+	# This MUST be an integer.
+	subset ErrorMemberCode of Int;
+	
+	# SPEC: A String providing a short description of the error.
+	# The message SHOULD be limited to a concise single sentence.
+	subset ErrorMemberMessage of Str;
+	
+	# SPEC: A Primitive or Structured value that contains additional information about the error.
+	# This may be omitted.
+	subset ErrorMemberData of Any;
 
-multi method bind_error (
-    # A Number that indicates the error type that occurred.
-    # This MUST be an integer.
-    Int :$code!,
+	JSON::RPC::ProtocolError.new(
+		message => 'Invalid Error.',
+		data => $error
+	).throw unless $error ~~ :( ErrorMemberCode :$code!, ErrorMemberMessage :$message!, ErrorMemberData :$data? );
 
-    # A String providing a short description of the error.
-    # The message SHOULD be limited to a concise single sentence.
-    Str :$message!,
-
-    # A Primitive or Structured value that contains additional information about the error.
-    # This may be omitted.
-    :$data?,
-)
-{
-    given $code {
+    given $error{'code'} {
         when -32700 {
-            return JSON::RPC::ParseError.new( data => $data);
+            return JSON::RPC::ParseError.new( |$error );
         }
         when -32600 {
-            return JSON::RPC::InvalidRequest.new( data => $data);
+            return JSON::RPC::InvalidRequest.new( |$error );
         }
         when -32601 {
-            return JSON::RPC::MethodNotFound.new( data => $data);
+            return JSON::RPC::MethodNotFound.new( |$error );
         }
         when -32602 {
-            return JSON::RPC::InvalidParams.new( data => $data);
+            return JSON::RPC::InvalidParams.new( |$error );
         }
         when -32603 {
-            return JSON::RPC::InternalError.new( data => $data);
+            return JSON::RPC::InternalError.new( |$error );
         }
         default {
-            return JSON::RPC::Error.new( code => $code, message => $message, data => $data );
+            return JSON::RPC::Error.new( |$error );
         }
     }
-
-}
-
-multi method bind_error {
-
-    # none of above spec signatures claimed error field format
-    JSON::RPC::TransportError.new( data => 'JSON-RPC Response Object is not valid' ).throw;
 }

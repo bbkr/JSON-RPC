@@ -3,23 +3,23 @@
 
 role JSON::RPC::Error is Exception {
 
-    # When a rpc call encounters an error,
+    # SPEC: When a rpc call encounters an error,
     # the Response Object MUST contain the error member
     # with a value that is a Object with the following members:
 
-    # A Number that indicates the error type that occurred.
+    # SPEC: A Number that indicates the error type that occurred.
     # This MUST be an integer.
     has Int $.code is rw;
 
-    # A String providing a short description of the error.
+    # SPEC: A String providing a short description of the error.
     # The message SHOULD be limited to a concise single sentence.
     has Str $.message is rw;
 
-    # A Primitive or Structured value that contains additional information about the error.
+    # SPEC: A Primitive or Structured value that contains additional information about the error.
     # This may be omitted.
     has Any $.data is rw;
 
-    # Stringify output for debug purposes.
+    # stringify output for debug purposes.
     method Str ( ) {
         my $error = $.message ~ ' (' ~ $.code ~ ')';
         $error ~= ': ' ~ $.data.perl if $.data.defined;
@@ -27,7 +27,7 @@ role JSON::RPC::Error is Exception {
         return $error;
     }
 
-    # Make response error member for serving purposes.
+    # make response error member for serving purposes.
     method Hash {
         my %error = (
             'code' => $.code,
@@ -38,15 +38,15 @@ role JSON::RPC::Error is Exception {
         return %error;
     }
 
-    # Make gist output for console printing purposes
+    # make gist output for console printing purposes
     method gist ( ) {
         return self.Str;
     }
 
 }
 
-# Invalid JSON was received by the server.
-# An error occurred on the server while parsing the JSON text.
+# invalid JSON was received by the server.
+# an error occurred on the server while parsing the JSON text.
 class JSON::RPC::ParseError does JSON::RPC::Error {
 
     method new ( :$data ) {
@@ -55,7 +55,7 @@ class JSON::RPC::ParseError does JSON::RPC::Error {
 
 }
 
-# The JSON sent is not a valid Request object.
+# the JSON sent is not a valid Request object
 class JSON::RPC::InvalidRequest does JSON::RPC::Error {
 
     method new ( :$data ) {
@@ -64,7 +64,7 @@ class JSON::RPC::InvalidRequest does JSON::RPC::Error {
 
 }
 
-# The method does not exist / is not available.
+# the method does not exist / is not available
 class JSON::RPC::MethodNotFound does JSON::RPC::Error {
 
     method new ( :$data ) {
@@ -73,7 +73,7 @@ class JSON::RPC::MethodNotFound does JSON::RPC::Error {
 
 }
 
-# Invalid method parameter(s).
+# invalid method parameter(s)
 class JSON::RPC::InvalidParams does JSON::RPC::Error {
 
     method new ( :$data ) {
@@ -82,7 +82,7 @@ class JSON::RPC::InvalidParams does JSON::RPC::Error {
 
 }
 
-# Internal JSON-RPC error.
+# internal JSON-RPC error
 class JSON::RPC::InternalError does JSON::RPC::Error {
 
     method new ( :$data ) {
@@ -91,7 +91,7 @@ class JSON::RPC::InternalError does JSON::RPC::Error {
 
 }
 
-# Transport error.
+# transport error
 class JSON::RPC::TransportError does JSON::RPC::Error {
 
     method new ( :$data ) {
@@ -100,7 +100,7 @@ class JSON::RPC::TransportError does JSON::RPC::Error {
 
 }
 
-# Protocol error.
+# protocol error
 class JSON::RPC::ProtocolError does JSON::RPC::Error {
 
     method new ( :$message, :$data ) {

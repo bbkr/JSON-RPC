@@ -4,9 +4,9 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Client;
 
-plan( 53 );
+plan( 39 );
 
-my ($rpc, $name, @responses);
+my ($rpc, $name, @responses, $responses);
 
 # Specification examples from L<http://www.jsonrpc.org/specification#examples>
 
@@ -113,8 +113,10 @@ spec(
     ]',
     force => True
 );
-isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
-lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+lives_ok {
+	$rpc.'rpc.batch'( ).dummy( );
+	@responses = $rpc.'rpc.flush'( );
+}, $name;
 try { ~@responses[ 0 ] };
 isa_ok $!, JSON::RPC::InvalidRequest, $name ~ ' validate';
 
@@ -128,10 +130,12 @@ spec(
     ]',
     force => True
 );
-isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
-lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+lives_ok {
+	$rpc.'rpc.batch'( ).dummy( );
+	$rpc.'rpc.batch'( ).dummy( );
+	$rpc.'rpc.batch'( ).dummy( );
+	@responses = $rpc.'rpc.flush'( );
+}, $name;
 try { ~@responses[ 0 ] };
 isa_ok $!, JSON::RPC::InvalidRequest, $name ~ ' validate';
 try { ~@responses[ 1 ] };
@@ -158,13 +162,15 @@ spec(
     ]',
     ids => [ '1', '2', Any:U, '5', '9' ], force => True
 );
-isa_ok $rpc.'rpc.batch'( ).sum( 1, 2, 4 ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).subtract( 42, 23 ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).dummy( ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).'foo.get'( name => 'myself' ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).get_data( ), Nil, $name ~ ' stack';
-lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+lives_ok {
+	$rpc.'rpc.batch'( ).sum( 1, 2, 4 );
+	$rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
+	$rpc.'rpc.batch'( ).subtract( 42, 23 );
+	$rpc.'rpc.batch'( ).dummy( );
+	$rpc.'rpc.batch'( ).'foo.get'( name => 'myself' );
+	$rpc.'rpc.batch'( ).get_data( );
+	@responses = $rpc.'rpc.flush'( );
+}, $name;
 is @responses[ 0 ], 7, $name ~ ' validate';
 is @responses[ 1 ], 19, $name ~ ' validate';
 try { ~@responses[ 2 ] };
@@ -181,9 +187,12 @@ spec(
     ]',
     Nil # Nothing is returned for all notification batches
 );
-isa_ok $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_sum( 1, 2, 4 ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.flush'(), Nil, $name ~ ' flush';
+lives_ok {
+	$rpc.'rpc.batch'( ).'rpc.notification'( ).notify_sum( 1, 2, 4 );
+	$rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
+	$responses = $rpc.'rpc.flush'();
+}, $name;
+isa_ok $responses, Nil, $name ~ ' validate';
 
 # Other tests not covered by specification examples
 
@@ -228,9 +237,11 @@ spec(
         {"jsonrpc": "2.0", "result": "pong", "id": 1}
     ]'
 );
-isa_ok $rpc.'rpc.batch'( ).ping( ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).pong( ), Nil, $name ~ ' stack';
-lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+lives_ok {
+	$rpc.'rpc.batch'( ).ping( );
+	$rpc.'rpc.batch'( ).pong( );
+	@responses = $rpc.'rpc.flush'( );
+}, $name;
 is @responses[ 0 ], 'pong', $name ~ ' validate';
 is @responses[ 1 ], 'ping', $name ~ ' validate';
 
@@ -246,11 +257,33 @@ spec(
     ]',
     ids => [ 1, 1 ]
 );
-isa_ok $rpc.'rpc.batch'( ).ping( ), Nil, $name ~ ' stack';
-isa_ok $rpc.'rpc.batch'( ).pong( ), Nil, $name ~ ' stack';
-lives_ok { @responses = $rpc.'rpc.flush'( ) }, $name ~ ' flush';
+lives_ok {
+	$rpc.'rpc.batch'( ).ping( );
+	$rpc.'rpc.batch'( ).pong( );
+	@responses = $rpc.'rpc.flush'( );
+}, $name;
 is @responses[ 0 ], 'pong', $name ~ ' validate';
 is @responses[ 1 ], 'ping', $name ~ ' validate';
+
+spec(
+    'amount of Responses in Batch different than expected',
+    '[
+        {"jsonrpc": "2.0", "method": "ping", "id": 1},
+        {"jsonrpc": "2.0", "method": "pong", "id": 2}
+    ]',
+    '[
+        {"jsonrpc": "2.0", "result": "pong", "id": 1},
+        {"jsonrpc": "2.0", "result": "ping", "id": 2},
+        {"jsonrpc": "2.0", "result": "pang", "id": 3}
+    ]',
+    ids => [ 1, 2, 3 ]
+);
+try {
+	$rpc.'rpc.batch'( ).ping( );
+	$rpc.'rpc.batch'( ).pong( );
+	$rpc.'rpc.flush'( )
+};
+isa_ok $!, JSON::RPC::ProtocolError, $name ~ ' validate';
 
 try { $rpc.subtract( 23, minuend => 42 ) };
 isa_ok $!, JSON::RPC::ProtocolError, 'cannot use positional and named params at the same time';
@@ -288,4 +321,3 @@ sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$force = F
 		sequencer => &sequencer.assuming( :@ids )
 	);
 }
-
