@@ -4,7 +4,7 @@
     "depends": [
         "JSON::Tiny", 
         "URI", 
-        "HTTP::Easy::PSGI", 
+        "HTTP::Easy", 
         "LWP::Simple"
     ], 
     "description": "JSON-RPC 2.0 client and server", 
