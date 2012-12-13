@@ -278,6 +278,7 @@ You can save client context to avoid typing.
 ### How to make Batch call?
 
 Method `'rpc.batch'( )` puts client in batch context while method `'rpc.flush'( )` sends Requests.
+Note that those methods contain dot in names and they must be quoted.
 
 ```perl
     $client.'rpc.batch'( ).add( 2, 2 );
