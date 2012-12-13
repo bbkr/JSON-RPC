@@ -187,14 +187,14 @@ For example code `204 No Content` should be used in HTTP transport.
 
 ### How to implement Error handling?
 
-Errors defined in 2.0 spec are represented by `JSON::RPC::Error` exceptions:
+Errors defined in 2.0 spec are represented by `X::JSON::RPC` exceptions:
 
-* `JSON::RPC::ParseError` - Invalid JSON was received by the server.
-* `JSON::RPC::InvalidRequest` - The structure sent by client is not a valid Request object.
-* `JSON::RPC::MethodNotFound` - The method does not exist in server handler application.
-* `JSON::RPC::InvalidParams` - Invalid method parameters, no handler candidates with matching signature found.
-* `JSON::RPC::InternalError` - Remote method died.
-* `JSON::RPC::ProtocolError` - Other deviation from specification.
+* `X::JSON::RPC::ParseError` - Invalid JSON was received by the server.
+* `X::JSON::RPC::InvalidRequest` - The structure sent by client is not a valid Request object.
+* `X::JSON::RPC::MethodNotFound` - The method does not exist in server handler application.
+* `X::JSON::RPC::InvalidParams` - Invalid method parameters, no handler candidates with matching signature found.
+* `X::JSON::RPC::InternalError` - Remote method died.
+* `X::JSON::RPC::ProtocolError` - Other deviation from specification.
 
 Every exception has numeric `code` attribute that indicates the error type that occurred, text `message` attribute that provides a short description of the error and optional `data` attribute that contains additional information about the error.
 
@@ -204,7 +204,7 @@ Every exception has numeric `code` attribute that indicates the error type that 
     try {
         $c.hello( 'John Doe' );
         CATCH {
-            when JSON::RPC::MethodNotFound {
+            when X::JSON::RPC::MethodNotFound {
                 say 'Server is rude';
             }
             default {
@@ -228,20 +228,20 @@ Every exception has numeric `code` attribute that indicates the error type that 
 
 Client will receive `message` attribute "Internal error." with explanation "Cannot divide by 0" as `data` attribute.
 
-* Throw `JSON::RPC::Error` exception.
+* Throw `X::JSON::RPC` exception.
 
 ```perl
 	class My::App {
 	    method treasure {
-	        JSON::RPC::Error.new( code => -1, message => 'Access denied.', data => 'Thou shall not pass!' ).throw;
+	        X::JSON::RPC.new( code => -1, message => 'Access denied.', data => 'Thou shall not pass!' ).throw;
 	    }
 	}
 ```
 
-Exception `JSON::RPC::Error` is composable so you can easily define your own errors.
+Exception `X::JSON::RPC` is composable so you can easily define your own errors.
 
 ```perl
-    class My::Error does JSON::RPC::Error {
+    class My::Error does X::JSON::RPC {
         method new {
             self.bless( *, code => -1, message => 'Access denied.', data => 'Thou shall not pass!' );
         }
@@ -288,7 +288,7 @@ Method `'rpc.batch'( )` puts client in batch context while method `'rpc.flush'( 
 		try {
 			$response.say;
 			CATCH {
-				when JSON::RPC::Error {
+				when X::JSON::RPC {
 					say 'Oops! ', .message;
 				}
 			}
@@ -306,7 +306,7 @@ Important things to remember:
 * Client will sort responses to match order in which methods were stacked.
 * Notifications do not have corresponding response.
 * Batch containing only Notifications will return Nil on flush.
-* Attempt to flush empty Batch will result in `JSON::RPC::InvalidRequest` exception.
+* Attempt to flush empty Batch will result in `X::JSON::RPC::InvalidRequest` exception.
 * Individual exceptions are returned as Failures, thrown when called in sink context.
 
 You can save client context to avoid typing.

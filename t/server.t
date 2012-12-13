@@ -6,7 +6,7 @@ use JSON::RPC::Server;
 
 plan( 28 );
 
-class CustomError does JSON::RPC::Error {
+class CustomError does X::JSON::RPC {
     method new {
         self.bless( *, code => -1, message => 'GLaDOS is watching.', data => 'The cake was a lie.' );
     }

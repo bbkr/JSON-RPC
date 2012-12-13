@@ -1,7 +1,7 @@
 # JSON-PRC 2.0 spec defines Error Object in chapter 5.1
 # derived from http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
 
-role JSON::RPC::Error is Exception {
+role X::JSON::RPC is Exception {
 
     # SPEC: When a rpc call encounters an error,
     # the Response Object MUST contain the error member
@@ -47,7 +47,7 @@ role JSON::RPC::Error is Exception {
 
 # invalid JSON was received by the server.
 # an error occurred on the server while parsing the JSON text.
-class JSON::RPC::ParseError does JSON::RPC::Error {
+class X::JSON::RPC::ParseError does X::JSON::RPC {
 
     method new ( :$data ) {
         self.bless( *, code => -32700, message => 'Parse error.', data => $data );
@@ -56,7 +56,7 @@ class JSON::RPC::ParseError does JSON::RPC::Error {
 }
 
 # the JSON sent is not a valid Request object
-class JSON::RPC::InvalidRequest does JSON::RPC::Error {
+class X::JSON::RPC::InvalidRequest does X::JSON::RPC {
 
     method new ( :$data ) {
         self.bless( *, code => -32600, message => 'Invalid Request.', data => $data );
@@ -65,7 +65,7 @@ class JSON::RPC::InvalidRequest does JSON::RPC::Error {
 }
 
 # the method does not exist / is not available
-class JSON::RPC::MethodNotFound does JSON::RPC::Error {
+class X::JSON::RPC::MethodNotFound does X::JSON::RPC {
 
     method new ( :$data ) {
         self.bless( *, code => -32601, message => 'Method not found.', data => $data );
@@ -74,7 +74,7 @@ class JSON::RPC::MethodNotFound does JSON::RPC::Error {
 }
 
 # invalid method parameter(s)
-class JSON::RPC::InvalidParams does JSON::RPC::Error {
+class X::JSON::RPC::InvalidParams does X::JSON::RPC {
 
     method new ( :$data ) {
         self.bless( *, code => -32602, message => 'Invalid params.', data => $data );
@@ -83,7 +83,7 @@ class JSON::RPC::InvalidParams does JSON::RPC::Error {
 }
 
 # internal JSON-RPC error
-class JSON::RPC::InternalError does JSON::RPC::Error {
+class X::JSON::RPC::InternalError does X::JSON::RPC {
 
     method new ( :$data ) {
         self.bless( *, code => -32603, message => 'Internal error.', data => $data );
@@ -92,7 +92,7 @@ class JSON::RPC::InternalError does JSON::RPC::Error {
 }
 
 # protocol error
-class JSON::RPC::ProtocolError does JSON::RPC::Error {
+class X::JSON::RPC::ProtocolError does X::JSON::RPC {
 
     method new ( :$message, :$data ) {
         self.bless( *, code => -32000, message => $message // 'Protocol Error.', data => $data );

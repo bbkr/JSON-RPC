@@ -1,7 +1,7 @@
 use URI;
 use LWP::Simple;
 use JSON::Tiny;
-use JSON::RPC::Error;
+use X::JSON::RPC;
 
 class JSON::RPC::Client;
 
@@ -26,7 +26,7 @@ INIT {
             # so dispatch has to be done manually depending on nature of passed params
             return method ( *@positional, *%named ) {
                 if @positional  and %named {
-                    JSON::RPC::ProtocolError.new(
+                    X::JSON::RPC::ProtocolError.new(
                         message => 'Cannot use positional and named params at the same time.'
                     ).throw;
                 }
@@ -127,11 +127,11 @@ method !handler( Str :$method!, :$params ) {
     my $out = self!validate_response( $response );
 
     # failed procedure call, throw exception.
-    $out.throw if $out ~~ JSON::RPC::Error;
+    $out.throw if $out ~~ X::JSON::RPC;
 
     # SPEC: This member is REQUIRED.
     # It MUST be the same as the value of the id member in the Request Object.
-    JSON::RPC::ProtocolError.new(
+    X::JSON::RPC::ProtocolError.new(
 		message => 'Request id is different than response id.',
 		data => { 'request' => %request, 'response' => $response }
 	).throw unless %request{'id'} eqv $response{'id'};
@@ -210,7 +210,7 @@ method ::('rpc.flush') {
 				if $subposition;
 			
 			# extract relevant part of Response
-			$responses[ $position ] = ( $response{'out'} ~~ JSON::RPC::Error )
+			$responses[ $position ] = ( $response{'out'} ~~ X::JSON::RPC )
 			    ?? Failure.new( $response{'out'} )
 			    !! $response{'out'};
 			
@@ -224,7 +224,7 @@ method ::('rpc.flush') {
         # if Response was not found by id member it must be Invalid Request error
         for $responses[ $position .. * ].kv -> $subposition, $response {
             
-            next unless $response{'out'} ~~ JSON::RPC::InvalidRequest;
+            next unless $response{'out'} ~~ X::JSON::RPC::InvalidRequest;
             
 			# swap Responses at position being checked and desired position if not already in place
 			$responses[ $position, $position + $subposition ] = $responses[ $position + $subposition, $position ]
@@ -237,13 +237,13 @@ method ::('rpc.flush') {
 			last;
         }
         
-        JSON::RPC::ProtocolError.new(
+        X::JSON::RPC::ProtocolError.new(
             message => 'Cannot match context between Requests and Responses in Batch.',
             data => { 'requests' => @!stack, 'responses' => $responses }
         ).throw unless $found;
 		
 		LAST {
-	        JSON::RPC::ProtocolError.new(
+	        X::JSON::RPC::ProtocolError.new(
 	            message => 'Amount of Responses in Batch higher than expected',
 	            data => { 'requests' => @!stack, 'responses' => $responses }
 	        ).throw if $position != $responses.elems - 1;
@@ -262,8 +262,8 @@ method !parse_json ( Str $body ) {
 
     try { $parsed = from-json( $body ); };
 
-    JSON::RPC::ProtocolError.new( data => ~$! ).throw if defined $!;
-    JSON::RPC::ProtocolError.new.throw unless $parsed ~~ Array|Hash;
+    X::JSON::RPC::ProtocolError.new( data => ~$! ).throw if defined $!;
+    X::JSON::RPC::ProtocolError.new.throw unless $parsed ~~ Array|Hash;
 
     return $parsed;
 }
@@ -300,7 +300,7 @@ method !validate_response ( $response ) {
 			return self!bind_error( $response{'error'} );
 		}
 		default {
-			JSON::RPC::ProtocolError.new(
+			X::JSON::RPC::ProtocolError.new(
 				message => 'Invalid Response.',
 				data => $response
 			).throw;
@@ -327,29 +327,29 @@ method !bind_error ( $error ) {
 	# This may be omitted.
 	subset ErrorMemberData of Any;
 
-	JSON::RPC::ProtocolError.new(
+	X::JSON::RPC::ProtocolError.new(
 		message => 'Invalid Error.',
 		data => $error
 	).throw unless $error ~~ :( ErrorMemberCode :$code!, ErrorMemberMessage :$message!, ErrorMemberData :$data? );
 
     given $error{'code'} {
         when -32700 {
-            return JSON::RPC::ParseError.new( |$error );
+            return X::JSON::RPC::ParseError.new( |$error );
         }
         when -32600 {
-            return JSON::RPC::InvalidRequest.new( |$error );
+            return X::JSON::RPC::InvalidRequest.new( |$error );
         }
         when -32601 {
-            return JSON::RPC::MethodNotFound.new( |$error );
+            return X::JSON::RPC::MethodNotFound.new( |$error );
         }
         when -32602 {
-            return JSON::RPC::InvalidParams.new( |$error );
+            return X::JSON::RPC::InvalidParams.new( |$error );
         }
         when -32603 {
-            return JSON::RPC::InternalError.new( |$error );
+            return X::JSON::RPC::InternalError.new( |$error );
         }
         default {
-            return JSON::RPC::Error.new( |$error );
+            return X::JSON::RPC.new( |$error );
         }
     }
 }

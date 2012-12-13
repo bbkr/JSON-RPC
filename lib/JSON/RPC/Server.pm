@@ -1,5 +1,5 @@
 use JSON::Tiny;
-use JSON::RPC::Error;
+use X::JSON::RPC;
 use HTTP::Easy::PSGI;
 
 class JSON::RPC::Server;
@@ -58,7 +58,7 @@ method handler ( Str :$json! ) {
             # SPEC: To send several Request objects at the same time,
             # the Client MAY send an Array filled with Request objects.
             # (empty Array is not valid request)
-            JSON::RPC::InvalidRequest.new.throw unless $parsed.elems;
+            X::JSON::RPC::InvalidRequest.new.throw unless $parsed.elems;
             @requests = $parsed.list;
         }
         else {
@@ -103,7 +103,7 @@ method handler ( Str :$json! ) {
                 %response{'result'} = $result;
 
                 CATCH {
-                    when JSON::RPC::InvalidRequest {
+                    when X::JSON::RPC::InvalidRequest {
 
                         %response = %template;
 
@@ -114,7 +114,7 @@ method handler ( Str :$json! ) {
                         # If there was an error in detecting the id in the Request object, it MUST be Null.
                         %response{'id'} = Any;
                     }
-                    when JSON::RPC::Error {
+                    when X::JSON::RPC {
 
                         # SPEC: Notifications are not confirmable by definition,
                         # since they do not have a Response object to be returned.
@@ -139,7 +139,7 @@ method handler ( Str :$json! ) {
             # SPEC: If the batch rpc call itself fails to be recognized as an valid JSON
             # or as an Array with at least one value,
             # the response from the Server MUST be a single Response object.
-            when JSON::RPC::ParseError|JSON::RPC::InvalidRequest {
+            when X::JSON::RPC::ParseError|X::JSON::RPC::InvalidRequest {
 
                 # SPEC: Response object
                 $out = %template;
@@ -163,8 +163,8 @@ method !parse_json ( Str $body ) {
 
     try { $parsed = from-json( $body ); };
 
-    JSON::RPC::ParseError.new( data => ~$! ).throw if defined $!;
-    JSON::RPC::ParseError.new.throw unless $parsed ~~ Array|Hash;
+    X::JSON::RPC::ParseError.new( data => ~$! ).throw if defined $!;
+    X::JSON::RPC::ParseError.new.throw unless $parsed ~~ Array|Hash;
 
     return $parsed;
 }
@@ -205,7 +205,7 @@ method !validate_request ( $request ) {
 			$mode = 'Notification';
 		}
         default {
-			JSON::RPC::InvalidRequest.new.throw;
+			X::JSON::RPC::InvalidRequest.new.throw;
 		}
     }
     
@@ -217,7 +217,7 @@ method !search_method ( Str $name ) {
     # locate public method in application
     my $method = $.application.^find_method( $name );
 
-    JSON::RPC::MethodNotFound.new.throw unless $method;
+    X::JSON::RPC::MethodNotFound.new.throw unless $method;
 
     return $method;
 }
@@ -227,7 +227,7 @@ method !validate_params ( Routine $method, |params ) {
     # find all method candidates that recognize passed params
     my @candidates = $method.cando( params );
 
-    JSON::RPC::InvalidParams.new.throw unless @candidates;
+    X::JSON::RPC::InvalidParams.new.throw unless @candidates;
 
     # many mathches are not an error
     # first candidate is taken
@@ -244,8 +244,8 @@ method !call ( Method $candidate, |params ) {
         CATCH {
 
             # wrap unhandled error type as internal error
-            when not $_ ~~ JSON::RPC::Error {
-                JSON::RPC::InternalError.new( data => .Str ).throw;
+            when not $_ ~~ X::JSON::RPC {
+                X::JSON::RPC::InternalError.new( data => .Str ).throw;
             }
         }
     };
