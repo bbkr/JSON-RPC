@@ -9,16 +9,16 @@ included in [Rakudo Star](https://github.com/rakudo/star) since 2012.04.
 
 ```perl
    use JSON::RPC::Client;
-   
+
    # create new client with url to server
    my $c = JSON::RPC::Client.new( url => 'http://localhost:8080' );
-   
+
    # method without params    
    say $c.ping;
-   
+
    # method with positional params
    say $c.hi( 'John Doe' );
-   
+
    # method with named params
    say $c.hello( name => 'John Doe' );
 ```
@@ -31,16 +31,16 @@ included in [Rakudo Star](https://github.com/rakudo/star) since 2012.04.
     # define application class
     # that will handle remote procedure calls
     class My::App {
-    
+
         # method without params
         method ping { return 'pong' }
-    
+
         # method with positional params
         method hi ( Str $name! ) { return 'Hi ' ~ $name }
 
         # method with named params
         method hello ( Str :$name! ) { return 'Hello ' ~ $name }
-    
+
         # multi method with different signatures
         multi method offer ( Int $age where { $age < 8 } ) {
             return [ 'Toy' ];
@@ -48,7 +48,7 @@ included in [Rakudo Star](https://github.com/rakudo/star) since 2012.04.
         multi method offer ( Int $age where { 8 <= $age <= 16 } ) {
             return [ 'Computer', 'Pet' ];
         }
-    
+
     }
 
     # start server with your application as handler
@@ -92,17 +92,17 @@ You can use both. Using class name results in static dispatch while using object
 
 ```perl
     class My::App {
-    
+
         has $!db;
         submethod BEGIN { $!db = ... }  # connect to database
-    
+
         method ping ( ) { return 'pong' }
-    
+
     }
-    
+
     # BEGIN is not called
     JSON::RPC::Server.new( application => My::App ).run;
-    
+
     # BEGIN is called
     JSON::RPC::Server.new( application => My::App.new ).run;
 ```
@@ -162,7 +162,7 @@ Do not `run( )` server. Instead use `handler( )` method which takes JSON request
 
 ```perl
     my $server = JSON::RPC::Server.new( application => My::App );
-    
+
     my $response = handler( json => receive_request_in_my_own_way( ) );
     send_response_in_my_own_way( $response ) if defined $response;
 ```
