@@ -75,7 +75,7 @@ There are 4 specs of JSON-RPC published so far:
 Use `uri` param in constructor.
 
 ```perl
-	JSON::RPC::Client.new( uri => URI.new( 'http://localhost:8080' ) );
+    JSON::RPC::Client.new( uri => URI.new( 'http://localhost:8080' ) );
 ```
 
 ### Can I bind server to port other than 8080?
@@ -147,11 +147,11 @@ This is useful when you want to use JSON-RPC on some framework which provides it
 Pass `transport` param to `new( )` instead of `uri`/ `url` param. This should be a closure that accepts JSON request and returns JSON response.
 
 ```perl
-	sub transport ( Str :$json, Bool :$get_response ) {
-		return send_request_in_my_own_way_and_obtain_response_if_needed( $request );
-	}
+    sub transport ( Str :$json, Bool :$get_response ) {
+        return send_request_in_my_own_way_and_obtain_response_if_needed( $request );
+    }
 
-	my $client = JSON::RPC::Client.new( transport => &transport, url => ... );
+    my $client = JSON::RPC::Client.new( transport => &transport, url => ... );
 ```
 
 Your transport will be given extra param `get_response` which informs if response is expected from the server or not (for example in case of Notification or Batch of Notifications).
@@ -161,10 +161,10 @@ Your transport will be given extra param `get_response` which informs if respons
 Do not `run( )` server. Instead use `handler( )` method which takes JSON request param and returns JSON response.
 
 ```perl
-	my $server = JSON::RPC::Server.new( application => My::App );
+    my $server = JSON::RPC::Server.new( application => My::App );
     
-	my $response = handler( json => receive_request_in_my_own_way( ) );
-	send_response_in_my_own_way( $response ) if defined $response;
+    my $response = handler( json => receive_request_in_my_own_way( ) );
+    send_response_in_my_own_way( $response ) if defined $response;
 ```
 
 It is possible that request is a Notification or Batch of Notifications and `$response` is not returned from the server.
@@ -220,10 +220,10 @@ Every exception has numeric `code` attribute that indicates the error type that 
 * End method using die.
 
 ```perl
-	method divide ( Int $x, Int $y ) {
-	    die 'Cannot divide by 0' if $y ~~ 0;
-	    return $x / $y;
-	}
+    method divide ( Int $x, Int $y ) {
+        die 'Cannot divide by 0' if $y ~~ 0;
+        return $x / $y;
+    }
 ```
 
 Client will receive `message` attribute "Internal error." with explanation "Cannot divide by 0" as `data` attribute.
@@ -231,11 +231,11 @@ Client will receive `message` attribute "Internal error." with explanation "Cann
 * Throw `X::JSON::RPC` exception.
 
 ```perl
-	class My::App {
-	    method treasure {
-	        X::JSON::RPC.new( code => -1, message => 'Access denied.', data => 'Thou shall not pass!' ).throw;
-	    }
-	}
+    class My::App {
+        method treasure {
+            X::JSON::RPC.new( code => -1, message => 'Access denied.', data => 'Thou shall not pass!' ).throw;
+        }
+    }
 ```
 
 Exception `X::JSON::RPC` is composable so you can easily define your own errors.
@@ -262,17 +262,17 @@ Method `'rpc.notification'( )` puts client in notification context.
 Note that this method contains dot in name and it must be quoted.
 
 ```perl
-	$client.'rpc.notification'( ).heartbeat( ); # no response from this one
-	say $client.ping( ) # regular call again
+    $client.'rpc.notification'( ).heartbeat( ); # no response from this one
+    say $client.ping( ) # regular call again
 ```
 
 You can save client context to avoid typing.
 
 ```perl
-	my $n = $client.'rpc.notification'( );
-	for ^1024 {
-		$n.heartbeat( ); # no responses from those
-	}
+    my $n = $client.'rpc.notification'( );
+    for ^1024 {
+        $n.heartbeat( ); # no responses from those
+    }
 ```
 
 ### How to make Batch call?
@@ -280,24 +280,24 @@ You can save client context to avoid typing.
 Method `'rpc.batch'( )` puts client in batch context while method `'rpc.flush'( )` sends Requests.
 
 ```perl
-	$client.'rpc.batch'( ).add( 2, 2 );
-	$client.'rpc.batch'( ).'rpc.notification'( ).heartbeat( );
-	$client.'rpc.batch'( ).suicide( );
+    $client.'rpc.batch'( ).add( 2, 2 );
+    $client.'rpc.batch'( ).'rpc.notification'( ).heartbeat( );
+    $client.'rpc.batch'( ).suicide( );
 
-	for $client.'rpc.flush'( ) -> $response {
-		try {
-			$response.say;
-			CATCH {
-				when X::JSON::RPC {
-					say 'Oops! ', .message;
-				}
-			}
-		}
-	}
+    for $client.'rpc.flush'( ) -> $response {
+        try {
+            $response.say;
+            CATCH {
+                when X::JSON::RPC {
+                    say 'Oops! ', .message;
+                }
+            }
+        }
+    }
 
-	# Output:
-	# 4
-	# Opps! Suicide served.
+    # Output:
+    # 4
+    # Opps! Suicide served.
 ```
 
 Important things to remember:
@@ -312,11 +312,11 @@ Important things to remember:
 You can save client context to avoid typing.
 
 ```perl
-	my $b = $client.'rpc.batch'( );
-	for ^1024 {
-		$b.is_prime( $_ );
-	}
-	my @responses = $b.'rpc.flush'( );
+    my $b = $client.'rpc.batch'( );
+    for ^1024 {
+        $b.is_prime( $_ );
+    }
+    my @responses = $b.'rpc.flush'( );
 ```
 
 ## LICENSE

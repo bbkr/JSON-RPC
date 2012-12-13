@@ -21,7 +21,7 @@ spec(
     'rpc call with positional parameters',
     '{"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 2}',
     '{"jsonrpc": "2.0", "result": -19, "id": 2}',
-	ids => [ 2 ]
+    ids => [ 2 ]
 );
 is $rpc.subtract( 23, 42 ), -19, $name;
 
@@ -29,7 +29,7 @@ spec(
     'rpc call with named parameters',
     '{"jsonrpc": "2.0", "method": "subtract", "params": {"subtrahend": 23, "minuend": 42}, "id": 3}',
     '{"jsonrpc": "2.0", "result": 19, "id": 3}',
-	ids => [ 3 ]
+    ids => [ 3 ]
 );
 is $rpc.subtract( subtrahend => 23, minuend => 42 ), 19, $name;
 
@@ -37,7 +37,7 @@ spec(
     'rpc call with named parameters',
     '{"jsonrpc": "2.0", "method": "subtract", "params": {"minuend": 42, "subtrahend": 23}, "id": 4}',
     '{"jsonrpc": "2.0", "result": 19, "id": 4}',
-	ids => [ 4 ]
+    ids => [ 4 ]
 );
 is $rpc.subtract( subtrahend => 23, minuend => 42 ), 19, $name;
 
@@ -59,7 +59,7 @@ spec(
     'rpc call of non-existent method',        
     '{"jsonrpc": "2.0", "method": "foobar", "id": "1"}',
     '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "1"}',
-	ids => [ '1' ]
+    ids => [ '1' ]
 );
 try { $rpc.foobar( ) };
 isa_ok $!, X::JSON::RPC::MethodNotFound, $name;
@@ -68,7 +68,7 @@ spec(
     'rpc call with invalid JSON',
     '{"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]',
     '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
-	force => True
+    force => True
 );
 try { $rpc.dummy( ) };
 isa_ok $!, X::JSON::RPC::ParseError, $name;
@@ -77,7 +77,7 @@ spec(
     'rpc call with invalid Request object',
     '{"jsonrpc": "2.0", "method": 1, "params": "bar"}',
     '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}',
-	force => True
+    force => True
 );
 try { $rpc.dummy( ) };
 isa_ok $!, X::JSON::RPC::InvalidRequest, $name;
@@ -89,11 +89,11 @@ spec(
       {"jsonrpc": "2.0", "method"
     ]',
     '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
-	force => True
+    force => True
 );
 try {
-	$rpc.'rpc.batch'( ).dummy( );
-	$rpc.'rpc.flush'( );
+    $rpc.'rpc.batch'( ).dummy( );
+    $rpc.'rpc.flush'( );
 };
 isa_ok $!, X::JSON::RPC::ParseError, $name;
 
@@ -114,8 +114,8 @@ spec(
     force => True
 );
 lives_ok {
-	$rpc.'rpc.batch'( ).dummy( );
-	@responses = $rpc.'rpc.flush'( );
+    $rpc.'rpc.batch'( ).dummy( );
+    @responses = $rpc.'rpc.flush'( );
 }, $name;
 try { ~@responses[ 0 ] };
 isa_ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
@@ -131,10 +131,10 @@ spec(
     force => True
 );
 lives_ok {
-	$rpc.'rpc.batch'( ).dummy( );
-	$rpc.'rpc.batch'( ).dummy( );
-	$rpc.'rpc.batch'( ).dummy( );
-	@responses = $rpc.'rpc.flush'( );
+    $rpc.'rpc.batch'( ).dummy( );
+    $rpc.'rpc.batch'( ).dummy( );
+    $rpc.'rpc.batch'( ).dummy( );
+    @responses = $rpc.'rpc.flush'( );
 }, $name;
 try { ~@responses[ 0 ] };
 isa_ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
@@ -163,13 +163,13 @@ spec(
     ids => [ '1', '2', Any:U, '5', '9' ], force => True
 );
 lives_ok {
-	$rpc.'rpc.batch'( ).sum( 1, 2, 4 );
-	$rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
-	$rpc.'rpc.batch'( ).subtract( 42, 23 );
-	$rpc.'rpc.batch'( ).dummy( );
-	$rpc.'rpc.batch'( ).'foo.get'( name => 'myself' );
-	$rpc.'rpc.batch'( ).get_data( );
-	@responses = $rpc.'rpc.flush'( );
+    $rpc.'rpc.batch'( ).sum( 1, 2, 4 );
+    $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
+    $rpc.'rpc.batch'( ).subtract( 42, 23 );
+    $rpc.'rpc.batch'( ).dummy( );
+    $rpc.'rpc.batch'( ).'foo.get'( name => 'myself' );
+    $rpc.'rpc.batch'( ).get_data( );
+    @responses = $rpc.'rpc.flush'( );
 }, $name;
 is @responses[ 0 ], 7, $name ~ ' validate';
 is @responses[ 1 ], 19, $name ~ ' validate';
@@ -188,9 +188,9 @@ spec(
     Nil # Nothing is returned for all notification batches
 );
 lives_ok {
-	$rpc.'rpc.batch'( ).'rpc.notification'( ).notify_sum( 1, 2, 4 );
-	$rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
-	$responses = $rpc.'rpc.flush'();
+    $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_sum( 1, 2, 4 );
+    $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
+    $responses = $rpc.'rpc.flush'();
 }, $name;
 isa_ok $responses, Nil, $name ~ ' validate';
 
@@ -238,9 +238,9 @@ spec(
     ]'
 );
 lives_ok {
-	$rpc.'rpc.batch'( ).ping( );
-	$rpc.'rpc.batch'( ).pong( );
-	@responses = $rpc.'rpc.flush'( );
+    $rpc.'rpc.batch'( ).ping( );
+    $rpc.'rpc.batch'( ).pong( );
+    @responses = $rpc.'rpc.flush'( );
 }, $name;
 is @responses[ 0 ], 'pong', $name ~ ' validate';
 is @responses[ 1 ], 'ping', $name ~ ' validate';
@@ -258,9 +258,9 @@ spec(
     ids => [ 1, 1 ]
 );
 lives_ok {
-	$rpc.'rpc.batch'( ).ping( );
-	$rpc.'rpc.batch'( ).pong( );
-	@responses = $rpc.'rpc.flush'( );
+    $rpc.'rpc.batch'( ).ping( );
+    $rpc.'rpc.batch'( ).pong( );
+    @responses = $rpc.'rpc.flush'( );
 }, $name;
 is @responses[ 0 ], 'pong', $name ~ ' validate';
 is @responses[ 1 ], 'ping', $name ~ ' validate';
@@ -279,9 +279,9 @@ spec(
     ids => [ 1, 2, 3 ]
 );
 try {
-	$rpc.'rpc.batch'( ).ping( );
-	$rpc.'rpc.batch'( ).pong( );
-	$rpc.'rpc.flush'( )
+    $rpc.'rpc.batch'( ).ping( );
+    $rpc.'rpc.batch'( ).pong( );
+    $rpc.'rpc.flush'( )
 };
 isa_ok $!, X::JSON::RPC::ProtocolError, $name ~ ' validate';
 
@@ -294,30 +294,30 @@ isa_ok $!, X::JSON::RPC::ProtocolError, 'cannot use positional and named params 
 # and then response from specification example is returned
 sub transport ( Str :$json, Bool :$get_response, :$data_sent_to_Server, :$data_sent_to_Client, :$force ) {
 
-	# sometimes request produced by client cannot mimic request from specification exmaple
-	# this may happen when parse error or invalid Request is expected
-	# in this case dummy call is ignored and response from specification example is returned
-	return $data_sent_to_Client if $force;
+    # sometimes request produced by client cannot mimic request from specification exmaple
+    # this may happen when parse error or invalid Request is expected
+    # in this case dummy call is ignored and response from specification example is returned
+    return $data_sent_to_Client if $force;
 
-	# request produced by client
+    # request produced by client
     # and request from specification example must match deeply
-	die unless from-json( $json ) eqv from-json( $data_sent_to_Server );
-		
-	return $data_sent_to_Client;
+    die unless from-json( $json ) eqv from-json( $data_sent_to_Server );
+
+    return $data_sent_to_Client;
 }
 
 # mocked sequencer
 
 sub sequencer ( :@ids ) {
 
-	return @ids.shift;
+    return @ids.shift;
 }
 
 sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$force = False, :@ids = [ 1 .. * ] ) {
 
-	$name = $description;
-	$rpc = JSON::RPC::Client.new(
-		transport => &transport.assuming( :$data_sent_to_Server, :$data_sent_to_Client, :$force ),
-		sequencer => &sequencer.assuming( :@ids )
-	);
+    $name = $description;
+    $rpc = JSON::RPC::Client.new(
+        transport => &transport.assuming( :$data_sent_to_Server, :$data_sent_to_Client, :$force ),
+        sequencer => &sequencer.assuming( :@ids )
+    );
 }

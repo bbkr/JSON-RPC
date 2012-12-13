@@ -20,7 +20,7 @@ class Application {
     method sum ( *@items ) { return [+]( @items ) }
     method notify_hello ( $count ){ $.count = $count }
     method get_data { return [ 'hello', 5 ] }
-    
+
     # methods for own tests
     has Int $.count is rw;
     method void { return }
@@ -41,7 +41,7 @@ spec(
     '{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}',
     '{"jsonrpc": "2.0", "result": 19, "id": 1}',
 );
-    
+
 spec(
     'rpc call with positional parameters',
     '{"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 2}',
@@ -236,7 +236,7 @@ sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$cannonica
 
     my ($got, $expected) = map { .defined ?? from-json( $_ ) !! $_ },
         $rpc.handler( json => $data_sent_to_Server ), $data_sent_to_Client;
-    
+
     # specification examples do not contain optional field "data" in "error" member
     # so it must be removed from all Response objects before comparison
     if $cannonicalize {
@@ -245,6 +245,6 @@ sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$cannonica
             when Hash { $got{ 'error' }.delete( 'data' ) if $got{ 'error' }{ 'data' }.defined }
         }
     }
-    
+
     is_deeply $got, $expected, $description;
 }

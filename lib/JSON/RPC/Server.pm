@@ -10,7 +10,7 @@ has Any $.application is rw = Any.new;
 method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
 
     my $app = sub (%env) {
-        
+
         # request can be Str, Buf or IO as described in
         # https://github.com/supernovus/perl6-http-easy/issues/3
         my $request;
@@ -19,14 +19,14 @@ method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
             when Buf { $request = .decode }
             when IO { $request = .slurp }
         }
-        
+
         # dispatch remote procedure call
         my $response = self.handler( json => $request );
-        
+
         # on empty response return HTTP 204 as adviced in
         # https://groups.google.com/forum/?fromgroups=#!topic/json-rpc/X7I2oxIOX8A
         return [ 204, [ ], [ ] ] unless $response;
-        
+
         return [
             200, [
                 'Content-Type' => 'application/json',
@@ -64,37 +64,37 @@ method handler ( Str :$json! ) {
         else {
             @requests.push( $parsed );
         }
-        
+
         my @responses = gather for @requests -> $request {
 
             # SPEC: Response object
             my %response;
-            
+
             try {
                 my $mode = self!validate_request( $request );
-                
+
                 # SPEC: When a rpc call is made, the Server MUST reply with a Response,
                 # except for in the case of Notifications.
                 unless $mode ~~ 'Notification' {
                     %response = %template;
-                    
+
                     # SPEC: This member is REQUIRED.
                     # It MUST be the same as the value of the id member in the Request Object.
                     %response{'id'} = $request{'id'};
                 }
-                
+
                 my $method = self!search_method( $request{'method'} );
-				
-				my $result;
-				if $request.exists( 'params' ) {
-					my $candidate = self!validate_params( $method, self.application, |$request{'params'} );
-					$result = self!call( $candidate, self.application, |$request{'params'} );
-				}
-				else {
-					my $candidate = self!validate_params( $method, self.application );
-					$result = self!call( $candidate, self.application );
-				}
-                
+
+                my $result;
+                if $request.exists( 'params' ) {
+                    my $candidate = self!validate_params( $method, self.application, |$request{'params'} );
+                    $result = self!call( $candidate, self.application, |$request{'params'} );
+                }
+                else {
+                    my $candidate = self!validate_params( $method, self.application );
+                    $result = self!call( $candidate, self.application );
+                }
+
                 # SPEC: The Server MUST NOT reply to a Notification,
                 # including those that are within a batch request.
                 next if $mode ~~ 'Notification';
@@ -131,7 +131,7 @@ method handler ( Str :$json! ) {
         }
 
         return unless ?@responses;
-        
+
         $out = $parsed ~~ Array ?? @responses !! @responses.pop;
 
         CATCH {
@@ -143,7 +143,7 @@ method handler ( Str :$json! ) {
 
                 # SPEC: Response object
                 $out = %template;
-                
+
                 # SPEC: This member is REQUIRED on error.
                 $out{'error'} = .Hash;
 
@@ -193,22 +193,22 @@ method !validate_request ( $request ) {
 
     given $request {
         when :( MemberJSONRPC :$jsonrpc!, MemberMethod :$method!, MemberID :$id! ) {
-			$mode = 'Request';
-		}
+            $mode = 'Request';
+        }
         when :( MemberJSONRPC :$jsonrpc!, MemberMethod :$method!, MemberParams :$params!, MemberID :$id! ) {
-			$mode = 'Request';
-		}
+            $mode = 'Request';
+        }
         when :( MemberJSONRPC :$jsonrpc!, MemberMethod :$method! ) {
-			$mode = 'Notification';
-		}
+            $mode = 'Notification';
+        }
         when :( MemberJSONRPC :$jsonrpc!, MemberMethod :$method!, MemberParams :$params! ) {
-			$mode = 'Notification';
-		}
+            $mode = 'Notification';
+        }
         default {
-			X::JSON::RPC::InvalidRequest.new.throw;
-		}
+            X::JSON::RPC::InvalidRequest.new.throw;
+        }
     }
-    
+
     return $mode;
 }
 
