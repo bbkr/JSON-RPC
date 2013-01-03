@@ -136,7 +136,7 @@ It is recommended that you validate params in signatures instead of method bodie
 
 ### What happens when more than one server handler candidate matches?
 
-When request can be dispatched to more than one multi method then first candidate in definition order is chosen. This is not an error.
+When request can be dispatched to more than one multi method then first candidate is chosen and called. JSON-RPC protocol design does not include multi methods - it can not mimic [calling sets](http://perlcabal.org/syn/S12.html#Calling_sets_of_methods) mechanism and does not have "ambiguous call" error in specification like Perl 6 does. Therefore such request is not considered an error.
 
 ### Can I use my own transport layers?
 
