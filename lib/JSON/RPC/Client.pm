@@ -78,6 +78,8 @@ sub sequencer {
     return @pool.roll( 32 ).join( );
 }
 
+method sink () { self }
+
 method !handler( Str :$method!, :$params ) {
 
     # SPEC: Request object
