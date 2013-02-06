@@ -17,14 +17,18 @@ INIT {
     $?PACKAGE.^add_fallback(
 
         # must return True or False to indicate if it can handle the fallback
-        sub ( $object, $name ) { return True unless $name ~~ /^rpc\./ },
+        sub ( $object, $name ) { return True },
 
         # should return the Code object to invoke
-        sub ( $object, $name ) {
+        sub ( $object, $name is copy ) {
 
+            # workaround to allow dispatch to methods inherited from Any( ) and Mu( )
+            $name ~~ s/^rpc\.//;
+            
             # placeholder variables cannot be passed-through
             # so dispatch has to be done manually depending on nature of passed params
             return method ( *@positional, *%named ) {
+
                 if @positional  and %named {
                     X::JSON::RPC::ProtocolError.new(
                         message => 'Cannot use positional and named params at the same time'

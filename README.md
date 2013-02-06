@@ -320,6 +320,31 @@ You can save client context to avoid typing.
     my @responses = $b.'rpc.flush'( );
 ```
 
+### How to call method that has name used by language itself?
+
+Every object instance has some methods inherited from `Mu` and `Any` classes.
+This rule also applies to `JSON::RPC::Client` and in rare cases you may fall into the trap.
+Below example calls `Mu::can( )` instead of doing remote procedure call of method named "can".
+
+```
+    $client.can( 'tuna' );
+
+```
+
+The workaround is to prefix method name with `rpc.`.
+Note that whole name must be quoted because it contains dot.
+
+```
+    $client.'rpc.can'( 'tuna' );
+
+```
+
+You can get full list of those troublemakers by invoking following code.
+
+```
+    JSON::RPC::Client.^mro>>.^methods>>.say
+```
+
 ## LICENSE
 
 Released under [Artistic License 2.0](http://www.perlfoundation.org/artistic_license_2_0).

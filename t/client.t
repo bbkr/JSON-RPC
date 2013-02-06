@@ -4,7 +4,7 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Client;
 
-plan( 38 );
+plan( 39 );
 
 my ($rpc, $name, @responses, $responses);
 
@@ -284,6 +284,14 @@ isa_ok $!, X::JSON::RPC::ProtocolError, $name ~ ' validate';
 
 try { $rpc.subtract( 23, minuend => 42 ) };
 isa_ok $!, X::JSON::RPC::ProtocolError, 'cannot use positional and named params at the same time';
+
+spec(
+    'can invoke language built-in method name',
+    '{"jsonrpc": "2.0", "method": "can", "params" : ["tuna"], "id": 1}',
+    '{"jsonrpc": "2.0", "result": "meow", "id": 1}',
+    ids => [ 1, 2, 3 ]
+);
+is $rpc.'rpc.can'( 'tuna' ), 'meow', $name;
 
 # mocked handlers for transport layer
 

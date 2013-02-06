@@ -4,7 +4,7 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Server;
 
-plan( 28 );
+plan( 29 );
 
 class CustomError does X::JSON::RPC {
     method new {
@@ -28,6 +28,7 @@ class Application {
     multi method suicide { CustomError.new.throw }
     method !toothbrush { "No!" }
     method rpc { return True }
+    method can ( $fish ) { return 'meow' }
 }
 
 my $rpc = JSON::RPC::Server.new( application => Application.new );
@@ -227,6 +228,13 @@ spec(
     'custom error',
     '{"jsonrpc": "2.0", "method": "suicide", "id": 1}',
     '{"jsonrpc": "2.0", "error": {"code": -1, "message": "GLaDOS is watching", "data": "The cake was a lie."}, "id": 1}',
+    cannonicalize => False
+);
+
+spec(
+    'can invoke language built-in method name',
+    '{"jsonrpc": "2.0", "method": "can", "params": ["tuna"], "id": 1}',
+    '{"jsonrpc": "2.0", "result": "meow", "id": 1}',
     cannonicalize => False
 );
 
