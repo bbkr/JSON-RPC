@@ -58,7 +58,7 @@ is $rpc.'rpc.notification'( ).foobar( ), Nil, $name;
 spec(
     'rpc call of non-existent method',        
     '{"jsonrpc": "2.0", "method": "foobar", "id": "1"}',
-    '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "1"}',
+    '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "1"}',
     ids => [ '1' ]
 );
 try { $rpc.foobar( ) };
@@ -67,7 +67,7 @@ isa_ok $!, X::JSON::RPC::MethodNotFound, $name;
 spec(
     'rpc call with invalid JSON',
     '{"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]',
-    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}',
     force => True
 );
 try { $rpc.dummy( ) };
@@ -76,7 +76,7 @@ isa_ok $!, X::JSON::RPC::ParseError, $name;
 spec(
     'rpc call with invalid Request object',
     '{"jsonrpc": "2.0", "method": 1, "params": "bar"}',
-    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}',
+    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}',
     force => True
 );
 try { $rpc.dummy( ) };
@@ -88,7 +88,7 @@ spec(
       {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
       {"jsonrpc": "2.0", "method"
     ]',
-    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}',
     force => True
 );
 try {
@@ -100,7 +100,7 @@ isa_ok $!, X::JSON::RPC::ParseError, $name;
 spec(
     'rpc call with an empty Array',
     '[]',
-    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}'
+    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}'
 );
 try { $rpc.'rpc.flush'( ) };
 isa_ok $!, X::JSON::RPC::InvalidRequest, $name;
@@ -109,7 +109,7 @@ spec(
     'rpc call with an invalid Batch (but not empty)',
     '[1]',
     '[
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
     ]',
     force => True
 );
@@ -124,9 +124,9 @@ spec(
     'rpc call with invalid Batch',
     '[1,2,3]',
     '[
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
     ]',
     force => True
 );
@@ -156,8 +156,8 @@ spec(
     '[
         {"jsonrpc": "2.0", "result": 7, "id": "1"},
         {"jsonrpc": "2.0", "result": 19, "id": "2"},
-        {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-        {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "5"},
+        {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+        {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "5"},
         {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
     ]',
     ids => [ '1', '2', Any:U, '5', '9' ], force => True

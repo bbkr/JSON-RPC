@@ -119,7 +119,7 @@ Declare it as private.
 
 ### Should I declare signatures for server handler methods?
 
-It is recommended that you validate params in signatures instead of method bodies. This way server correctly returns "Invalid params." error (more info later) and method is not called if signature does not match - you can easily separate validation from logic.
+It is recommended that you validate params in signatures instead of method bodies. This way server correctly returns "Invalid params" error (more info later) and method is not called if signature does not match - you can easily separate validation from logic.
 
 ```perl
     method add_programmer (
@@ -136,7 +136,7 @@ It is recommended that you validate params in signatures instead of method bodie
 
 ### What happens when more than one server handler candidate matches?
 
-When request can be dispatched to more than one multi method then first candidate is chosen and called. JSON-RPC protocol design does not include multi methods - it can not mimic [calling sets](http://perlcabal.org/syn/S12.html#Calling_sets_of_methods) mechanism and does not have "ambiguous call" error in specification like Perl 6 does. Therefore such request is not considered an error.
+When request can be dispatched to more than one multi method then first candidate is chosen and called. JSON-RPC protocol design does not include multi methods - it can not mimic [calling sets](http://perlcabal.org/syn/S12.html#Calling_sets_of_methods) mechanism and does not have "Ambiguous call" error in specification like Perl 6 does. Therefore such request is not considered an error.
 
 ### Can I use my own transport layers?
 
@@ -215,7 +215,7 @@ Every exception has numeric `code` attribute that indicates the error type that 
     }
 ```
 
-**Server** does all the exception handling automatically. For example if you provide application handler without some method client will receive "Method not found." error on call to this method. However if you want to report error from method it can be done in two ways.
+**Server** does all the exception handling automatically. For example if you provide application handler without some method client will receive "Method not found" error on call to this method. However if you want to report error from method it can be done in two ways.
 
 * End method using die.
 
@@ -226,14 +226,14 @@ Every exception has numeric `code` attribute that indicates the error type that 
     }
 ```
 
-Client will receive `message` attribute "Internal error." with explanation "Cannot divide by 0" as `data` attribute.
+Client will receive `message` attribute "Internal error" with explanation "Cannot divide by 0" as `data` attribute.
 
 * Throw `X::JSON::RPC` exception.
 
 ```perl
     class My::App {
         method treasure {
-            X::JSON::RPC.new( code => -1, message => 'Access denied.', data => 'Thou shall not pass!' ).throw;
+            X::JSON::RPC.new( code => -1, message => 'Access denied', data => 'Thou shall not pass!' ).throw;
         }
     }
 ```
@@ -243,7 +243,7 @@ Exception `X::JSON::RPC` is composable so you can easily define your own errors.
 ```perl
     class My::Error does X::JSON::RPC {
         method new {
-            self.bless( *, code => -1, message => 'Access denied.', data => 'Thou shall not pass!' );
+            self.bless( *, code => -1, message => 'Access denied', data => 'Thou shall not pass!' );
         }
     }
 ```

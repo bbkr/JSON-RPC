@@ -27,7 +27,7 @@ INIT {
             return method ( *@positional, *%named ) {
                 if @positional  and %named {
                     X::JSON::RPC::ProtocolError.new(
-                        message => 'Cannot use positional and named params at the same time.'
+                        message => 'Cannot use positional and named params at the same time'
                     ).throw;
                 }
                 elsif @positional {
@@ -134,7 +134,7 @@ method !handler( Str :$method!, :$params ) {
     # SPEC: This member is REQUIRED.
     # It MUST be the same as the value of the id member in the Request Object.
     X::JSON::RPC::ProtocolError.new(
-        message => 'Request id is different than response id.',
+        message => 'Request id is different than response id',
         data => { 'request' => %request, 'response' => $response }
     ).throw unless %request{'id'} eqv $response{'id'};
 
@@ -240,7 +240,7 @@ method ::('rpc.flush') {
         }
 
         X::JSON::RPC::ProtocolError.new(
-            message => 'Cannot match context between Requests and Responses in Batch.',
+            message => 'Cannot match context between Requests and Responses in Batch',
             data => { 'requests' => @!stack, 'responses' => $responses }
         ).throw unless $found;
 
@@ -303,7 +303,7 @@ method !validate_response ( $response ) {
         }
         default {
             X::JSON::RPC::ProtocolError.new(
-                message => 'Invalid Response.',
+                message => 'Invalid Response',
                 data => $response
             ).throw;
         }
@@ -330,7 +330,7 @@ method !bind_error ( $error ) {
     subset ErrorMemberData of Any;
 
     X::JSON::RPC::ProtocolError.new(
-        message => 'Invalid Error.',
+        message => 'Invalid Error',
         data => $error
     ).throw unless $error ~~ :( ErrorMemberCode :$code!, ErrorMemberMessage :$message!, ErrorMemberData :$data? );
 

@@ -8,7 +8,7 @@ plan( 28 );
 
 class CustomError does X::JSON::RPC {
     method new {
-        self.bless( *, code => -1, message => 'GLaDOS is watching.', data => 'The cake was a lie.' );
+        self.bless( *, code => -1, message => 'GLaDOS is watching', data => 'The cake was a lie.' );
     }
 }
 
@@ -75,19 +75,19 @@ spec(
 spec(
     'rpc call of non-existent method',        
     '{"jsonrpc": "2.0", "method": "foobar", "id": "1"}',
-    '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "1"}'
+    '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "1"}'
 );
 
 spec(
     'rpc call with invalid JSON',
     '{"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]',
-    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}'
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}'
 );
 
 spec(
     'rpc call with invalid Request object',
     '{"jsonrpc": "2.0", "method": 1, "params": "bar"}',
-    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}'
+    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}'
 );
 
 spec(
@@ -96,20 +96,20 @@ spec(
       {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
       {"jsonrpc": "2.0", "method"
     ]',
-    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}'
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}'
 );
 
 spec(
     'rpc call with an empty Array',
     '[]',
-    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}'
+    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}'
 );
 
 spec(
     'rpc call with an invalid Batch (but not empty)',
     '[1]',
     '[
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
     ]'
 );
 
@@ -117,9 +117,9 @@ spec(
     'rpc call with invalid Batch',
     '[1,2,3]',
     '[
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+      {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
     ]'
 );
 
@@ -136,8 +136,8 @@ spec(
     '[
         {"jsonrpc": "2.0", "result": 7, "id": "1"},
         {"jsonrpc": "2.0", "result": 19, "id": "2"},
-        {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null},
-        {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": "5"},
+        {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
+        {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "5"},
         {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
     ]'
 );
@@ -170,42 +170,42 @@ spec(
 spec(
     'parse error (empty string)',
     '',
-    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}',
     cannonicalize => False
 );
 
 spec(
     'parse error (top container is not JSON Object or Array)',
     '42',
-    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error."}, "id": null}',
+    '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}',
     cannonicalize => False
 );
 
 spec(
     'invalid request (null is not the same as omitted params)',
     '{"jsonrpc": "2.0", "method": "void", "params": null, "id": 1}',
-    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}',
+    '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}',
     cannonicalize => False
 );
 
 spec(
     'invalid params (no candidate found)',
     '{"jsonrpc": "2.0", "method": "void", "params": [1,2,3], "id": 1}',
-    '{"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params."}, "id": 1}',
+    '{"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": 1}',
     cannonicalize => False
 );
 
 spec(
     'private method not found',
     '{"jsonrpc": "2.0", "method": "toothbrush", "id": 1}',
-    '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found."}, "id": 1}',
+    '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": 1}',
     cannonicalize => False
 );
 
 spec(
     'batch recursion forbidden',
     '[[{"jsonrpc": "2.0", "method": "void", "id": 1}]]',
-    '[{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request."}, "id": null}]',
+    '[{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}]',
     cannonicalize => False
 );
 
@@ -219,14 +219,14 @@ spec(
 spec(
     'internal error',
     '{"jsonrpc": "2.0", "method": "suicide", "params": {"note": true}, "id": 1}',
-    '{"jsonrpc": "2.0", "error": {"code": -32603, "message": "Internal error.", "data": "The cake is a lie!"}, "id": 1}',
+    '{"jsonrpc": "2.0", "error": {"code": -32603, "message": "Internal error", "data": "The cake is a lie!"}, "id": 1}',
     cannonicalize => False
 );
 
 spec(
     'custom error',
     '{"jsonrpc": "2.0", "method": "suicide", "id": 1}',
-    '{"jsonrpc": "2.0", "error": {"code": -1, "message": "GLaDOS is watching.", "data": "The cake was a lie."}, "id": 1}',
+    '{"jsonrpc": "2.0", "error": {"code": -1, "message": "GLaDOS is watching", "data": "The cake was a lie."}, "id": 1}',
     cannonicalize => False
 );
 
