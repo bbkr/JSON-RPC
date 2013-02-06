@@ -11,5 +11,5 @@
     "name": "JSON::RPC", 
     "repo-type": "git", 
     "source-url": "git://github.com/bbkr/jsonrpc.git", 
-    "version": "0.15.0"
+    "version": "0.15.1"
 }

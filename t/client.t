@@ -4,7 +4,7 @@ use Test;
 use JSON::Tiny;
 use JSON::RPC::Client;
 
-plan( 39 );
+plan( 38 );
 
 my ($rpc, $name, @responses, $responses);
 
@@ -207,9 +207,6 @@ lives_ok {
 lives_ok {
     $rpc = JSON::RPC::Client.new( uri => URI.new('http://rakudo.org') )
 }, 'can initialize using URI object';
-
-try { $rpc.ping( ) };
-isa_ok $!, X::JSON::RPC::ProtocolError, 'live test';
 
 spec(
     'params member omitted when no params passed',
