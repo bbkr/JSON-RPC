@@ -18,6 +18,7 @@ method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
             when Str { $request = $_ }
             when Buf { $request = .decode }
             when IO { $request = .slurp }
+            default { $request = '' }
         }
 
         # dispatch remote procedure call
