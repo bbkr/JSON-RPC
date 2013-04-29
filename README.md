@@ -322,7 +322,7 @@ You can save client context to avoid typing.
 
 ### How to call method that has name used by language itself?
 
-Every object instance has some methods inherited from `Mu` and `Any` classes.
+Every object instance has some methods inherited from [Mu](http://doc.perl6.org/type/Mu) and [Any](http://doc.perl6.org/type/Any) classes.
 This rule also applies to `JSON::RPC::Client` and in rare cases you may fall into the trap.
 Below example calls `Mu::can( )` instead of doing remote procedure call of method named "can".
 
