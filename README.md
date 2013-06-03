@@ -151,7 +151,7 @@ Pass `transport` param to `new( )` instead of `uri`/ `url` param. This should be
         return send_request_in_my_own_way_and_obtain_response_if_needed( $request );
     }
 
-    my $client = JSON::RPC::Client.new( transport => &transport, url => ... );
+    my $client = JSON::RPC::Client.new( transport => &transport );
 ```
 
 Your transport will be given extra param `get_response` which informs if response is expected from the server or not (for example in case of Notification or Batch of Notifications).
