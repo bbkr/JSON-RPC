@@ -190,7 +190,7 @@ spec(
 lives_ok {
     $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_sum( 1, 2, 4 );
     $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
-    $responses = $rpc.'rpc.flush'();
+    $responses := $rpc.'rpc.flush'();
 }, $name;
 isa_ok $responses, Nil, $name ~ ' validate';
 
