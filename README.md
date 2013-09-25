@@ -2,7 +2,7 @@
 
 Supports [2.0 specification](http://www.jsonrpc.org/specification).
 
-Compatible with Perl 6 [Rakudo](http://rakudo.org/) 2012.11+,
+Compatible with Perl 6 [Rakudo](http://rakudo.org/) 2013.09+,
 included in [Rakudo Star](https://github.com/rakudo/star) since 2012.04.
 
 ## CLIENT
@@ -243,7 +243,7 @@ Exception `X::JSON::RPC` is composable so you can easily define your own errors.
 ```perl
     class My::Error does X::JSON::RPC {
         method new {
-            self.bless( *, code => -1, message => 'Access denied', data => 'Thou shall not pass!' );
+            self.bless( code => -1, message => 'Access denied', data => 'Thou shall not pass!' );
         }
     }
 ```

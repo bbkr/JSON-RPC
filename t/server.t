@@ -8,7 +8,7 @@ plan( 29 );
 
 class CustomError does X::JSON::RPC {
     method new {
-        self.bless( *, code => -1, message => 'GLaDOS is watching', data => 'The cake was a lie.' );
+        self.bless( code => -1, message => 'GLaDOS is watching', data => 'The cake was a lie.' );
     }
 }
 
