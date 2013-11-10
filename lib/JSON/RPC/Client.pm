@@ -163,7 +163,7 @@ method ::('rpc.flush') {
     # after all of the batch Request objects have been processed.
     my $responses;
 
-    if @!stack.grep: *.exists( 'id' ) {
+    if @!stack.grep: { $_{'id'}:exists } {
         $responses = $!transport( json => $requests, get_response => True );
     }
     # SPEC: If the batch rpc call itself fails to be recognized (...)
@@ -196,7 +196,7 @@ method ::('rpc.flush') {
 
     # SPEC: A Response object SHOULD exist for each Request object,
     # except there SHOULD NOT be any Response objects for notifications.
-    for @!stack.grep( *.exists( 'id' ) ).kv -> $position, $request {
+    for @!stack.grep( { $_{'id'}:exists } ).kv -> $position, $request {
 
         # SPEC: The Client SHOULD match contexts between the set of Request objects
         # and the resulting set of Response objects based on the id member within each Object.

@@ -249,8 +249,8 @@ sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$cannonica
     # so it must be removed from all Response objects before comparison
     if $cannonicalize {
         given $got {
-            when Array { for $got.list { $_{ 'error' }.delete( 'data' ) if $_{ 'error' }{ 'data' }.defined } }
-            when Hash { $got{ 'error' }.delete( 'data' ) if $got{ 'error' }{ 'data' }.defined }
+            when Array { for $got.list { $_{'error'}{'data'}:delete if $_{'error'}{'data'}.defined } }
+            when Hash { $got{'error'}{'data'}:delete if $got{'error'}{'data'}.defined }
         }
     }
 

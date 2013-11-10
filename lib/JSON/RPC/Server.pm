@@ -87,7 +87,7 @@ method handler ( Str :$json! ) {
                 my $method = self!search_method( $request{'method'} );
 
                 my $result;
-                if $request.exists( 'params' ) {
+                if $request{'params'}:exists {
                     my $candidate = self!validate_params( $method, self.application, |$request{'params'} );
                     $result = self!call( $candidate, self.application, |$request{'params'} );
                 }
