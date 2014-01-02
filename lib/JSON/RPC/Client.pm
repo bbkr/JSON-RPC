@@ -5,8 +5,8 @@ use X::JSON::RPC;
 
 class JSON::RPC::Client;
 
-has Code $!transport is rw;
-has Code $!sequencer is rw;
+has Code $!transport;
+has Code $!sequencer;
 has Bool $.is_batch = False;
 has Bool $.is_notification = False;
 has @!stack = ( );
