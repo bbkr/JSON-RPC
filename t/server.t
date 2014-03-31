@@ -172,14 +172,12 @@ spec(
     'parse error (empty string)',
     '',
     '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}',
-    cannonicalize => False
 );
 
 spec(
     'parse error (top container is not JSON Object or Array)',
     '42',
     '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}',
-    cannonicalize => False
 );
 
 spec(
