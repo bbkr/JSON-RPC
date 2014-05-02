@@ -11,10 +11,11 @@ has Bool $.is_batch = False;
 has Bool $.is_notification = False;
 has @!stack = ( );
 
-INIT {
+BEGIN {
 
     # install method auto dispatch
-    $?PACKAGE.^add_fallback(
+    $?PACKAGE.HOW.add_fallback(
+        $?PACKAGE,
 
         # must return True or False to indicate if it can handle the fallback
         sub ( $object, $name ) { return True },
