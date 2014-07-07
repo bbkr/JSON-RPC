@@ -18,17 +18,16 @@ BEGIN {
         $?PACKAGE,
 
         # must return True or False to indicate if it can handle the fallback
-        sub ( $object, $name ) { return True },
+        -> $, $name { True },
 
         # should return the Code object to invoke
-        sub ( $object, $name is copy ) {
-
+        -> $object, $name {
             # workaround to allow dispatch to methods inherited from Any( ) and Mu( )
-            $name ~~ s/^rpc\.//;
+            my $method = $name.subst(/^rpc\./, '');
             
             # placeholder variables cannot be passed-through
             # so dispatch has to be done manually depending on nature of passed params
-            return method ( *@positional, *%named ) {
+            method ( *@positional, *%named ) {
 
                 if @positional  and %named {
                     X::JSON::RPC::ProtocolError.new(
@@ -36,13 +35,13 @@ BEGIN {
                     ).throw;
                 }
                 elsif @positional {
-                    return $object!handler( method => $name, params => @positional );
+                    $object!handler( :$method, params => @positional );
                 }
                 elsif %named {
-                    return $object!handler( method => $name, params => %named );
+                    $object!handler( :$method, params => %named );
                 }
                 else {
-                    return $object!handler( method => $name );
+                    $object!handler( :$method );
                 }
             };
 
