@@ -62,7 +62,7 @@ spec(
     ids => [ '1' ]
 );
 try { $rpc.foobar( ) };
-isa_ok $!, X::JSON::RPC::MethodNotFound, $name;
+isa-ok $!, X::JSON::RPC::MethodNotFound, $name;
 
 spec(
     'rpc call with invalid JSON',
@@ -71,7 +71,7 @@ spec(
     force => True
 );
 try { $rpc.dummy( ) };
-isa_ok $!, X::JSON::RPC::ParseError, $name;
+isa-ok $!, X::JSON::RPC::ParseError, $name;
 
 spec(
     'rpc call with invalid Request object',
@@ -80,7 +80,7 @@ spec(
     force => True
 );
 try { $rpc.dummy( ) };
-isa_ok $!, X::JSON::RPC::InvalidRequest, $name;
+isa-ok $!, X::JSON::RPC::InvalidRequest, $name;
 
 spec(
     'rpc call Batch, invalid JSON',
@@ -95,7 +95,7 @@ try {
     $rpc.'rpc.batch'( ).dummy( );
     $rpc.'rpc.flush'( );
 };
-isa_ok $!, X::JSON::RPC::ParseError, $name;
+isa-ok $!, X::JSON::RPC::ParseError, $name;
 
 spec(
     'rpc call with an empty Array',
@@ -103,7 +103,7 @@ spec(
     '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}'
 );
 try { $rpc.'rpc.flush'( ) };
-isa_ok $!, X::JSON::RPC::InvalidRequest, $name;
+isa-ok $!, X::JSON::RPC::InvalidRequest, $name;
 
 spec(
     'rpc call with an invalid Batch (but not empty)',
@@ -113,12 +113,12 @@ spec(
     ]',
     force => True
 );
-lives_ok {
+lives-ok {
     $rpc.'rpc.batch'( ).dummy( );
     @responses = $rpc.'rpc.flush'( );
 }, $name;
 try { ~@responses[ 0 ] };
-isa_ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
+isa-ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
 
 spec(
     'rpc call with invalid Batch',
@@ -130,18 +130,18 @@ spec(
     ]',
     force => True
 );
-lives_ok {
+lives-ok {
     $rpc.'rpc.batch'( ).dummy( );
     $rpc.'rpc.batch'( ).dummy( );
     $rpc.'rpc.batch'( ).dummy( );
     @responses = $rpc.'rpc.flush'( );
 }, $name;
 try { ~@responses[ 0 ] };
-isa_ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
+isa-ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
 try { ~@responses[ 1 ] };
-isa_ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
+isa-ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
 try { ~@responses[ 2 ] };
-isa_ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
+isa-ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
 
 spec(
     'rpc call Batch',
@@ -162,7 +162,7 @@ spec(
     ]',
     ids => [ '1', '2', Any:U, '5', '9' ], force => True
 );
-lives_ok {
+lives-ok {
     $rpc.'rpc.batch'( ).sum( 1, 2, 4 );
     $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
     $rpc.'rpc.batch'( ).subtract( 42, 23 );
@@ -174,10 +174,10 @@ lives_ok {
 is @responses[ 0 ], 7, $name ~ ' validate';
 is @responses[ 1 ], 19, $name ~ ' validate';
 try { ~@responses[ 2 ] };
-isa_ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
+isa-ok $!, X::JSON::RPC::InvalidRequest, $name ~ ' validate';
 try { ~@responses[ 3 ] };
-isa_ok $!, X::JSON::RPC::MethodNotFound, $name ~ ' validate';
-is_deeply @responses[ 4 ], [ 'hello', 5 ], $name ~ ' validate';
+isa-ok $!, X::JSON::RPC::MethodNotFound, $name ~ ' validate';
+is-deeply @responses[ 4 ], [ 'hello', 5 ], $name ~ ' validate';
 
 spec(
     'rpc call Batch (all notifications)',
@@ -187,24 +187,24 @@ spec(
     ]',
     Nil # Nothing is returned for all notification batches
 );
-lives_ok {
+lives-ok {
     $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_sum( 1, 2, 4 );
     $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
     $responses := $rpc.'rpc.flush'();
 }, $name;
-isa_ok $responses, Nil, $name ~ ' validate';
+isa-ok $responses, Nil, $name ~ ' validate';
 
 # Other tests not covered by specification examples
 
-dies_ok {
+dies-ok {
     JSON::RPC::Client.new( url => 'http:///X##y' )
 }, 'cannot initialize using incorrect URL';
 
-lives_ok {
+lives-ok {
     JSON::RPC::Client.new( url => 'http://rakudo.org' )
 }, 'can initialize using correct URL';
 
-lives_ok {
+lives-ok {
     $rpc = JSON::RPC::Client.new( uri => URI.new('http://rakudo.org') )
 }, 'can initialize using URI object';
 
@@ -234,7 +234,7 @@ spec(
         {"jsonrpc": "2.0", "result": "pong", "id": 1}
     ]'
 );
-lives_ok {
+lives-ok {
     $rpc.'rpc.batch'( ).ping( );
     $rpc.'rpc.batch'( ).pong( );
     @responses = $rpc.'rpc.flush'( );
@@ -254,7 +254,7 @@ spec(
     ]',
     ids => [ 1, 1 ]
 );
-lives_ok {
+lives-ok {
     $rpc.'rpc.batch'( ).ping( );
     $rpc.'rpc.batch'( ).pong( );
     @responses = $rpc.'rpc.flush'( );
@@ -280,10 +280,10 @@ try {
     $rpc.'rpc.batch'( ).pong( );
     $rpc.'rpc.flush'( )
 };
-isa_ok $!, X::JSON::RPC::ProtocolError, $name ~ ' validate';
+isa-ok $!, X::JSON::RPC::ProtocolError, $name ~ ' validate';
 
 try { $rpc.subtract( 23, minuend => 42 ) };
-isa_ok $!, X::JSON::RPC::ProtocolError, 'cannot use positional and named params at the same time';
+isa-ok $!, X::JSON::RPC::ProtocolError, 'cannot use positional and named params at the same time';
 
 spec(
     'can invoke language built-in method name',

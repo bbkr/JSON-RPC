@@ -3,7 +3,7 @@ use LWP::Simple;
 use JSON::Tiny;
 use X::JSON::RPC;
 
-class JSON::RPC::Client;
+unit class JSON::RPC::Client;
 
 has Code $!transport;
 has Code $!sequencer;

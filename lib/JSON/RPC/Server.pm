@@ -2,7 +2,7 @@ use JSON::Tiny;
 use X::JSON::RPC;
 use HTTP::Easy::PSGI;
 
-class JSON::RPC::Server;
+unit class JSON::RPC::Server;
 
 # application to dispatch requests to
 has Any $.application is rw = Any.new;

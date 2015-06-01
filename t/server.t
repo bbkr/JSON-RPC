@@ -33,7 +33,7 @@ class Application {
 
 my $rpc = JSON::RPC::Server.new( application => Application.new );
 
-isa_ok $rpc, JSON::RPC::Server;
+isa-ok $rpc, JSON::RPC::Server;
 
 # Specification examples from L<http://www.jsonrpc.org/specification#examples>
 
@@ -252,5 +252,5 @@ sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$cannonica
         }
     }
 
-    is_deeply $got, $expected, $description;
+    is-deeply $got, $expected, $description;
 }
