@@ -252,5 +252,5 @@ sub spec ( $description, $data_sent_to_Server, $data_sent_to_Client, :$cannonica
         }
     }
 
-    is_deeply $got, $expected, $description;
+    is-deeply $got, $expected, $description;
 }
