@@ -33,7 +33,7 @@ class Application {
 
 my $rpc = JSON::RPC::Server.new( application => Application.new );
 
-isa_ok $rpc, JSON::RPC::Server;
+isa-ok $rpc, JSON::RPC::Server;
 
 # Specification examples from L<http://www.jsonrpc.org/specification#examples>
 
