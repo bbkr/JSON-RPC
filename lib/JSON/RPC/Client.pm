@@ -109,8 +109,7 @@ method !handler( Str :$method!, :$params ) {
 
     # Requests in Batch are not processed until rpc.flush method is called.
     if $.is_batch {
-        @!stack.push( { %request } );
-
+        @!stack.push( $%request );
         return;
     }
 
