@@ -219,7 +219,7 @@ spec(
     'null id is allowed',
     '{"jsonrpc": "2.0", "method": "ping", "id": null}',
     '{"jsonrpc": "2.0", "result": "pong", "id": null}',
-    ids => [ Any:U ]
+    ids => [ Any ]
 );
 is $rpc.ping( ), 'pong', $name;
 
