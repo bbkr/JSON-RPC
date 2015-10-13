@@ -1,5 +1,7 @@
 # JSON-RPC client and server
 
+[![Build Status](https://travis-ci.org/bbkr/jsonrpc.svg)](https://travis-ci.org/bbkr/jsonrpc)
+
 Supports [2.0 specification](http://www.jsonrpc.org/specification).
 
 Compatible with Perl 6 [Rakudo](http://rakudo.org/) 2013.09+,
