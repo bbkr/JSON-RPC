@@ -17,7 +17,7 @@ class Application {
     # methods used by specification examples
     multi method subtract ( $minuend!, $subtrahend! ) { return $minuend - $subtrahend }
     multi method subtract ( :$minuend!, :$subtrahend! ) { return $minuend - $subtrahend }
-    method sum ( *@items ) { return [+]( @items ) }
+    method addition ( *@items ) { return [+]( @items ) }
     method notify_hello ( $count ){ $.count = $count }
     method get_data { return [ 'hello', 5 ] }
 
@@ -94,7 +94,7 @@ spec(
 spec(
     'rpc call Batch, invalid JSON',
     '[
-      {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+      {"jsonrpc": "2.0", "method": "addition", "params": [1,2,4], "id": "1"},
       {"jsonrpc": "2.0", "method"
     ]',
     '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}'
@@ -127,7 +127,7 @@ spec(
 spec(
     'rpc call Batch',
     '[
-        {"jsonrpc": "2.0", "method": "sum", "params": [1,2,4], "id": "1"},
+        {"jsonrpc": "2.0", "method": "addition", "params": [1,2,4], "id": "1"},
         {"jsonrpc": "2.0", "method": "notify_hello", "params": [7]},
         {"jsonrpc": "2.0", "method": "subtract", "params": [42,23], "id": "2"},
         {"foo": "boo"},
