@@ -163,7 +163,7 @@ spec(
     ids => [ '1', '2', Any:U, '5', '9' ], force => True
 );
 lives-ok {
-    $rpc.'rpc.batch'( ).sum( 1, 2, 4 );
+    $rpc.'rpc.batch'( ).addition( 1, 2, 4 );
     $rpc.'rpc.batch'( ).'rpc.notification'( ).notify_hello( 7 );
     $rpc.'rpc.batch'( ).subtract( 42, 23 );
     $rpc.'rpc.batch'( ).dummy( );
