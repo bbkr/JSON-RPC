@@ -77,7 +77,7 @@ sub transport ( URI :$uri, Str :$json, Bool :$get_response ) {
 }
 
 sub sequencer {
-    state @pool = 'a' .. 'z', 'A' .. 'Z', 0 .. 9;
+    state @pool = ('a' .. 'z', 'A' .. 'Z', 0 .. 9).flat;
 
     return @pool.roll( 32 ).join( );
 }
