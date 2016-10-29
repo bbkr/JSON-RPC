@@ -3,6 +3,7 @@ use lib 'lib';
 use Test;
 use JSON::Tiny;
 use JSON::RPC::Client;
+use URI;
 
 plan( 39 );
 
