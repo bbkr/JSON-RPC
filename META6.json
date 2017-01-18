@@ -1,6 +1,8 @@
 {
-    "perl": "6.*",
-    "author": "Pawel Pabian",
+    "perl": "6.c",
+    "authors": [
+        "Pawel Pabian"
+    ],
     "authority": "bbkr",
     "depends": [
         "JSON::Tiny",
@@ -14,9 +16,9 @@
     "description": "JSON-RPC 2.0 client and server.",
     "name": "JSON::RPC",
     "provides": {
-        "JSON::RPC::Client": "lib/JSON/RPC/Client.pm",
-        "JSON::RPC::Server": "lib/JSON/RPC/Server.pm",
-        "X::JSON::RPC": "lib/X/JSON/RPC.pm"
+        "JSON::RPC::Client": "lib/JSON/RPC/Client.pm6",
+        "JSON::RPC::Server": "lib/JSON/RPC/Server.pm6",
+        "X::JSON::RPC": "lib/X/JSON/RPC.pm6"
     },
     "repo-type": "git",
     "source-url": "git://github.com/bbkr/jsonrpc.git",
