@@ -1,9 +1,20 @@
-branches:
-  only:
-    - master
 language: perl6
+
+os:
+  - linux
+  - osx
+
 perl6:
+  - 2016.12
   - latest
+
 install:
-  - rakudobrew build-panda
-  - panda installdeps .
+  - rakudobrew build zef
+  - zef --depsonly install .
+  - zef install Test::META
+  - zef build .
+
+script:
+    - prove -ve "perl6 -Ilib" t
+    - TEST_AUTHOR=1 prove -ve "perl6 -Ilib" t
+    - zef install JSON::RPC
