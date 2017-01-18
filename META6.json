@@ -1,7 +1,8 @@
 {
     "perl": "6.c",
     "authors": [
-        "Pawel Pabian"
+        "Pawel Pabian    (bbkr)    - Master mind",
+        "Ahmad M. Zawawi (azawawi) - Humble Contributor"
     ],
     "authority": "bbkr",
     "depends": [
