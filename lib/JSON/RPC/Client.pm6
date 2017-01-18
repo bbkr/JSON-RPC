@@ -24,7 +24,7 @@ BEGIN {
         -> $object, $name {
             # workaround to allow dispatch to methods inherited from Any( ) and Mu( )
             my $method = $name.subst(/^rpc\./, '');
-            
+
             # placeholder variables cannot be passed-through
             # so dispatch has to be done manually depending on nature of passed params
             method ( *@positional, *%named ) {
