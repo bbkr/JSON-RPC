@@ -1,57 +1,58 @@
 # JSON-RPC client and server
 
 [![Build Status](https://travis-ci.org/bbkr/jsonrpc.svg)](https://travis-ci.org/bbkr/jsonrpc)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/bbkr/jsonrpc?svg=true)](https://ci.appveyor.com/project/bbkr/jsonrpc/branch/master)
 
 Supports [2.0 specification](http://www.jsonrpc.org/specification).
 
 ## CLIENT
 
-```perl
-   use JSON::RPC::Client;
+```Perl6
+use JSON::RPC::Client;
 
-   # create new client with url to server
-   my $c = JSON::RPC::Client.new( url => 'http://localhost:8080' );
+# create new client with url to server
+my $c = JSON::RPC::Client.new( url => 'http://localhost:8080' );
 
-   # method without params    
-   say $c.ping;
+# method without params
+say $c.ping;
 
-   # method with positional params
-   say $c.hi( 'John Doe' );
+# method with positional params
+say $c.hi( 'John Doe' );
 
-   # method with named params
-   say $c.hello( name => 'John Doe' );
+# method with named params
+say $c.hello( name => 'John Doe' );
 ```
 
 ## SERVER
 
-```perl
-    use JSON::RPC::Server;
+```Perl6
+use JSON::RPC::Server;
 
-    # define application class
-    # that will handle remote procedure calls
-    class My::App {
+# define application class
+# that will handle remote procedure calls
+class My::App {
 
-        # method without params
-        method ping { return 'pong' }
+    # method without params
+    method ping { return 'pong' }
 
-        # method with positional params
-        method hi ( Str $name! ) { return 'Hi ' ~ $name }
+    # method with positional params
+    method hi ( Str $name! ) { return 'Hi ' ~ $name }
 
-        # method with named params
-        method hello ( Str :$name! ) { return 'Hello ' ~ $name }
+    # method with named params
+    method hello ( Str :$name! ) { return 'Hello ' ~ $name }
 
-        # multi method with different signatures
-        multi method offer ( Int $age where { $age < 8 } ) {
-            return [ 'Toy' ];
-        }
-        multi method offer ( Int $age where { 8 <= $age <= 16 } ) {
-            return [ 'Computer', 'Pet' ];
-        }
-
+    # multi method with different signatures
+    multi method offer ( Int $age where { $age < 8 } ) {
+        return [ 'Toy' ];
+    }
+    multi method offer ( Int $age where { 8 <= $age <= 16 } ) {
+        return [ 'Computer', 'Pet' ];
     }
 
-    # start server with your application as handler
-    JSON::RPC::Server.new( application => My::App ).run;
+}
+
+# start server with your application as handler
+JSON::RPC::Server.new( application => My::App ).run;
 ```
 
 Your server is now available at [http://localhost:8080](http://localhost:8080).
@@ -73,64 +74,64 @@ There are 4 specs of JSON-RPC published so far:
 
 Use `uri` param in constructor.
 
-```perl
-    JSON::RPC::Client.new( uri => URI.new( 'http://localhost:8080' ) );
+```Perl6
+JSON::RPC::Client.new( uri => URI.new( 'http://localhost:8080' ) );
 ```
 
 ### Can I bind server to port other than 8080?
 
 Use `port` param in `run( )` method.
 
-```perl
-    JSON::RPC::Server.new( application => My::App ).run( port => 9999 );
+```Perl6
+JSON::RPC::Server.new( application => My::App ).run( port => 9999 );
 ```
 
 ### Should I use class name or object instance as server handler?
 
 You can use both. Using class name results in static dispatch while using object instance allows you to initialize attributes in your class.
 
-```perl
-    class My::App {
+```Perl6
+class My::App {
 
-        has $!db;
-        submethod BEGIN { $!db = ... }  # connect to database
+    has $!db;
+    submethod BEGIN { $!db = ... }  # connect to database
 
-        method ping ( ) { return 'pong' }
+    method ping ( ) { return 'pong' }
 
-    }
+}
 
-    # BEGIN is not called
-    JSON::RPC::Server.new( application => My::App ).run;
+# BEGIN is not called
+JSON::RPC::Server.new( application => My::App ).run;
 
-    # BEGIN is called
-    JSON::RPC::Server.new( application => My::App.new ).run;
+# BEGIN is called
+JSON::RPC::Server.new( application => My::App.new ).run;
 ```
 
 ### How can method be excluded from server handler dispatch?
 
 Declare it as private.
 
-```perl
-    method !get_database_info ( ) {
-        return 'username', 'password';
-    }
+```Perl6
+method !get_database_info ( ) {
+    return 'username', 'password';
+}
 ```
 
 ### Should I declare signatures for server handler methods?
 
 It is recommended that you validate params in signatures instead of method bodies. This way server correctly returns "Invalid params" error (more info later) and method is not called if signature does not match - you can easily separate validation from logic.
 
-```perl
-    method add_programmer (
-        Str :$name!,
-        Int :$age! where { $age >= 0 },
-        Int :$experience! where { $experience <= $age }
-    ) {
-        # params can be trusted here
-        # all fields are required and
-        # negative age or experience exceeding age shall not pass
-        $!db.insert( $name, $age, $experience );
-    }
+```Perl6
+method add_programmer (
+    Str :$name!,
+    Int :$age! where { $age >= 0 },
+    Int :$experience! where { $experience <= $age }
+) {
+    # params can be trusted here
+    # all fields are required and
+    # negative age or experience exceeding age shall not pass
+    $!db.insert( $name, $age, $experience );
+}
 ```
 
 ### What happens when more than one server handler candidate matches?
@@ -145,12 +146,12 @@ This is useful when you want to use JSON-RPC on some framework which provides it
 
 Pass `transport` param to `new( )` instead of `uri`/ `url` param. This should be a closure that accepts JSON request and returns JSON response.
 
-```perl
-    sub transport ( Str :$json, Bool :$get_response ) {
-        return send_request_in_my_own_way_and_obtain_response_if_needed( $request );
-    }
+```Perl6
+sub transport ( Str :$json, Bool :$get_response ) {
+    return send_request_in_my_own_way_and_obtain_response_if_needed( $request );
+}
 
-    my $client = JSON::RPC::Client.new( transport => &transport );
+my $client = JSON::RPC::Client.new( transport => &transport );
 ```
 
 Your transport will be given extra param `get_response` which informs if response is expected from the server or not (for example in case of Notification or Batch of Notifications).
@@ -159,11 +160,11 @@ Your transport will be given extra param `get_response` which informs if respons
 
 Do not `run( )` server. Instead use `handler( )` method which takes JSON request param and returns JSON response.
 
-```perl
-    my $server = JSON::RPC::Server.new( application => My::App );
+```Perl6
+my $server = JSON::RPC::Server.new( application => My::App );
 
-    my $response = handler( json => receive_request_in_my_own_way( ) );
-    send_response_in_my_own_way( $response ) if defined $response;
+my $response = handler( json => receive_request_in_my_own_way( ) );
+send_response_in_my_own_way( $response ) if defined $response;
 ```
 
 It is possible that request is a Notification or Batch of Notifications and `$response` is not returned from the server.
@@ -180,8 +181,8 @@ For example code `204 No Content` should be used in HTTP transport.
 
 **Server** accepts `debug` param in `run( )` method.
 
-```perl
-    JSON::RPC::Server.new( application => My::App ).run( :debug );
+```Perl6
+JSON::RPC::Server.new( application => My::App ).run( :debug );
 ```
 
 ### How to implement Error handling?
@@ -199,42 +200,42 @@ Every exception has numeric `code` attribute that indicates the error type that 
 
 **Client** can catch those exceptions.
 
-```perl
-    try {
-        $c.hello( 'John Doe' );
-        CATCH {
-            when X::JSON::RPC::MethodNotFound {
-                say 'Server is rude';
-            }
-            default {
-                # stringified exception is in human-readable form
-                say ~$_;
-            }
+```Perl6
+try {
+    $c.hello( 'John Doe' );
+    CATCH {
+        when X::JSON::RPC::MethodNotFound {
+            say 'Server is rude';
+        }
+        default {
+            # stringified exception is in human-readable form
+            say ~$_;
         }
     }
+}
 ```
 
 **Server** does all the exception handling automatically. For example if you provide application handler without some method client will receive "Method not found" error on call to this method. However if you want to report error from method it can be done in two ways.
 
 * End method using die.
 
-```perl
-    method divide ( Int $x, Int $y ) {
-        die 'Cannot divide by 0' if $y ~~ 0;
-        return $x / $y;
-    }
+```Perl6
+method divide ( Int $x, Int $y ) {
+    die 'Cannot divide by 0' if $y ~~ 0;
+    return $x / $y;
+}
 ```
 
 Client will receive `message` attribute "Internal error" with explanation "Cannot divide by 0" as `data` attribute.
 
 * Throw `X::JSON::RPC` exception.
 
-```perl
-    class My::App {
-        method treasure {
-            X::JSON::RPC.new( code => -1, message => 'Access denied', data => 'Thou shall not pass!' ).throw;
-        }
+```Perl6
+class My::App {
+    method treasure {
+        X::JSON::RPC.new( code => -1, message => 'Access denied', data => 'Thou shall not pass!' ).throw;
     }
+}
 ```
 
 Exception `X::JSON::RPC` is composable so you can easily define your own errors.
@@ -249,10 +250,10 @@ Exception `X::JSON::RPC` is composable so you can easily define your own errors.
 
 And use them in application handler.
 
-```perl
-    method treasure {
-        My::Error.new.throw;
-    }
+```Perl6
+method treasure {
+    My::Error.new.throw;
+}
 ```
 
 ### How to make Notification call?
@@ -260,18 +261,18 @@ And use them in application handler.
 Method `'rpc.notification'( )` puts client in notification context.
 Note that this method contains dot in name and it must be quoted.
 
-```perl
-    $client.'rpc.notification'( ).heartbeat( ); # no response from this one
-    say $client.ping( ) # regular call again
+```Perl6
+$client.'rpc.notification'( ).heartbeat( ); # no response from this one
+say $client.ping( ) # regular call again
 ```
 
 You can save client context to avoid typing.
 
-```perl
-    my $n = $client.'rpc.notification'( );
-    for ^1024 {
-        $n.heartbeat( ); # no responses from those
-    }
+```Perl6
+my $n = $client.'rpc.notification'( );
+for ^1024 {
+    $n.heartbeat( ); # no responses from those
+}
 ```
 
 ### How to make Batch call?
@@ -279,25 +280,25 @@ You can save client context to avoid typing.
 Method `'rpc.batch'( )` puts client in batch context while method `'rpc.flush'( )` sends Requests.
 Note that those methods contain dot in names and they must be quoted.
 
-```perl
-    $client.'rpc.batch'( ).add( 2, 2 );
-    $client.'rpc.batch'( ).'rpc.notification'( ).heartbeat( );
-    $client.'rpc.batch'( ).suicide( );
+```Perl6
+$client.'rpc.batch'( ).add( 2, 2 );
+$client.'rpc.batch'( ).'rpc.notification'( ).heartbeat( );
+$client.'rpc.batch'( ).suicide( );
 
-    for $client.'rpc.flush'( ) -> $response {
-        try {
-            $response.say;
-            CATCH {
-                when X::JSON::RPC {
-                    say 'Oops! ', .message;
-                }
+for $client.'rpc.flush'( ) -> $response {
+    try {
+        $response.say;
+        CATCH {
+            when X::JSON::RPC {
+                say 'Oops! ', .message;
             }
         }
     }
+}
 
-    # Output:
-    # 4
-    # Opps! Suicide served.
+# Output:
+# 4
+# Opps! Suicide served.
 ```
 
 Important things to remember:
@@ -311,12 +312,12 @@ Important things to remember:
 
 You can save client context to avoid typing.
 
-```perl
-    my $b = $client.'rpc.batch'( );
-    for ^1024 {
-        $b.is_prime( $_ );
-    }
-    my @responses = $b.'rpc.flush'( );
+```Perl6
+my $b = $client.'rpc.batch'( );
+for ^1024 {
+    $b.is_prime( $_ );
+}
+my @responses = $b.'rpc.flush'( );
 ```
 
 ### How to call method that has name used by language itself?
@@ -325,23 +326,21 @@ Every object instance has some methods inherited from [Mu](http://doc.perl6.org/
 This rule also applies to `JSON::RPC::Client` and in rare cases you may fall into the trap.
 Below example calls `Mu::can( )` instead of doing remote procedure call of method named "can".
 
-```
-    $client.can( 'tuna' );
-
+```Perl6
+$client.can( 'tuna' );
 ```
 
 The workaround is to prefix method name with `rpc.`.
 Note that whole name must be quoted because it contains dot.
 
-```
-    $client.'rpc.can'( 'tuna' );
-
+```Perl6
+$client.'rpc.can'( 'tuna' );
 ```
 
 You can get full list of those troublemakers by invoking following code.
 
-```
-    JSON::RPC::Client.^mro>>.^methods>>.say
+```Perl6
+JSON::RPC::Client.^mro>>.^methods>>.say
 ```
 
 ## LICENSE
