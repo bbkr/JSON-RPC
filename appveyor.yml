@@ -20,6 +20,5 @@ build: off
 test_script:
   - prove -ve "perl6 -Ilib" t
   - set TEST_AUTHOR=1 && prove -ve "perl6 -Ilib" t
-  - zef install JSON::RPC
 
 shallow_clone: true

@@ -17,4 +17,3 @@ install:
 script:
     - prove -ve "perl6 -Ilib" t
     - TEST_AUTHOR=1 prove -ve "perl6 -Ilib" t
-    - zef install JSON::RPC
