@@ -14,7 +14,7 @@ method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
         # request can be Str, Buf or IO as described in
         # https://github.com/supernovus/perl6-http-easy/issues/3
         my $request;
-        given %env{'psgi.input'} {
+        given %env{'p6sgi.input'} {
             when Str { $request = $_ }
             when Buf { $request = .decode }
             when IO { $request = .slurp }
