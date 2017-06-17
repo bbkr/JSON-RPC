@@ -8,7 +8,7 @@ install:
   - SET PATH=C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;%PATH%
   - git clone https://github.com/tadzik/rakudobrew %USERPROFILE%\rakudobrew
   - SET PATH=%USERPROFILE%\rakudobrew\bin;%PATH%
-  - rakudobrew build moar 2016.12
+  - rakudobrew build moar
   - rakudobrew build zef
   - cd %APPVEYOR_BUILD_FOLDER%
   - zef --depsonly install .
