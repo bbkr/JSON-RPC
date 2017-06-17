@@ -5,7 +5,6 @@ os:
   - osx
 
 perl6:
-  - 2016.12
   - latest
 
 install:
