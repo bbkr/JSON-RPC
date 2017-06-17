@@ -343,10 +343,6 @@ You can get full list of those troublemakers by invoking following code.
 JSON::RPC::Client.^mro>>.^methods>>.say
 ```
 
-## LICENSE
-
-Released under [Artistic License 2.0](http://www.perlfoundation.org/artistic_license_2_0).
-
 ## CONTACT
 
 You can find me (and many awesome people who helped me to develop this module)
