@@ -1,15 +1,15 @@
 {
     "perl": "6.c",
     "authors": [
-        "Pawel Pabian    (bbkr)    - Master mind",
-        "Ahmad M. Zawawi (azawawi) - Humble Contributor"
+        "Pawel (bbkr) Pabian",
+        "Ahmad M. Zawawi (azawawi)"
     ],
     "authority": "bbkr",
     "depends": [
         "JSON::Tiny",
         "URI",
         "HTTP::Easy",
-        "LWP::Simple"
+        "HTTP::UserAgent"
     ],
     "test-depends": [
         "Test"
@@ -23,6 +23,6 @@
     },
     "repo-type": "git",
     "source-url": "git://github.com/bbkr/jsonrpc.git",
-    "version": "0.17.3",
+    "version": "0.17.0",
     "license" : "Artistic-2.0"
 }

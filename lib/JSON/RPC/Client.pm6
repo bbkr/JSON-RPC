@@ -1,5 +1,6 @@
 use URI;
-use LWP::Simple;
+use HTTP::UserAgent;
+use HTTP::Request;
 use JSON::Tiny;
 use X::JSON::RPC;
 
@@ -68,12 +69,18 @@ multi submethod BUILD ( Code :$transport!, Code :$sequencer? ) {
     $!sequencer = $sequencer // &sequencer;
 }
 
-# TODO: Replace it with HTTP::Client in the future
 sub transport ( URI :$uri, Str :$json, Bool :$get_response ) {
 
-    # HTTP protocol always has response
-    # so get_response flag is ignored.
-    return LWP::Simple.post( ~$uri, { 'Content-Type' => 'application/json' }, $json );
+    my $request = HTTP::Request.new;
+    $request.uri( $uri );
+    $request.set-method( 'POST' );
+    $request.add-content( $json );
+    $request.header.field( Content-Type => 'aplication/json' );
+    
+    my $response = HTTP::UserAgent.new.request( $request );
+    X::JSON::RPC::Transport.new( message => $response.status-line ).throw( ) unless $response.is-success;
+    
+    return $response.content;
 }
 
 sub sequencer {

@@ -99,3 +99,12 @@ class X::JSON::RPC::ProtocolError does X::JSON::RPC {
     }
 
 }
+
+# protocol error
+class X::JSON::RPC::Transport does X::JSON::RPC {
+
+    method new ( :$message ) {
+        self.bless( code => -32001, message => $message );
+    }
+
+}
