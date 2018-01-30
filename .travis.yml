@@ -1,10 +1,7 @@
 language: perl6
 os:
-  - linux
-  - osx
-dist: trusty
-sudo: required
-osx_image: xcode8.3
+    - linux
+    - osx
 install:
-  - rakudobrew build zef
-  - zef --depsonly install .
+    - rakudobrew build zef
+    - zef --depsonly install .
