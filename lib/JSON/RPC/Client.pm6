@@ -51,17 +51,17 @@ BEGIN {
 
 }
 
-multi submethod BUILD ( URI :$uri!, Code :$!sequencer ) {
+multi submethod BUILD ( URI :$uri!, Code :$!sequencer = &sequencer ) {
 
     $!transport = &transport.assuming( uri => $uri );
 }
 
-multi submethod BUILD ( Str :$url!, Code :$!sequencer ) {
+multi submethod BUILD ( Str :$url!, Code :$!sequencer = &sequencer ) {
 
     $!transport = &transport.assuming( uri => URI.new( $url, :is_validating ) );
 }
 
-multi submethod BUILD ( Code :$!transport!, Code :$!sequencer ) {
+multi submethod BUILD ( Code :$!transport!, Code :$!sequencer = &sequencer ) {
 
 }
 

@@ -11,7 +11,7 @@ Supports [2.0 specification](http://www.jsonrpc.org/specification).
 use JSON::RPC::Client;
 
 # create new client with url to server
-my $c = JSON::RPC::Client.new( url => 'http://localhost:8080' );
+my $c = JSON::RPC::Client.new( url => 'http://127.0.0.1:8080' );
 
 # method without params
 say $c.ping;
@@ -52,7 +52,7 @@ class My::App {
 }
 
 # start server with your application as handler
-JSON::RPC::Server.new( application => My::App ).run;
+JSON::RPC::Server.new( application => My::App ).run( );
 ```
 
 Your server is now available at [http://localhost:8080](http://localhost:8080).
@@ -75,7 +75,7 @@ There are 4 specs of JSON-RPC published so far:
 Use `uri` param in constructor.
 
 ```Perl6
-JSON::RPC::Client.new( uri => URI.new( 'http://localhost:8080' ) );
+JSON::RPC::Client.new( uri => URI.new( 'http://127.0.0.1:8080' ) );
 ```
 
 ### Can I bind server to port other than 8080?
@@ -101,10 +101,10 @@ class My::App {
 }
 
 # BEGIN is not called
-JSON::RPC::Server.new( application => My::App ).run;
+JSON::RPC::Server.new( application => My::App ).run( );
 
 # BEGIN is called
-JSON::RPC::Server.new( application => My::App.new ).run;
+JSON::RPC::Server.new( application => My::App.new ).run( );
 ```
 
 ### How can method be excluded from server handler dispatch?
