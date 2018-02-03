@@ -51,22 +51,18 @@ BEGIN {
 
 }
 
-multi submethod BUILD ( URI :$uri!, Code :$sequencer? ) {
+multi submethod BUILD ( URI :$uri!, Code :$!sequencer ) {
 
     $!transport = &transport.assuming( uri => $uri );
-    $!sequencer = $sequencer // &sequencer;
 }
 
-multi submethod BUILD ( Str :$url!, Code :$sequencer? ) {
+multi submethod BUILD ( Str :$url!, Code :$!sequencer ) {
 
     $!transport = &transport.assuming( uri => URI.new( $url, :is_validating ) );
-    $!sequencer = $sequencer // &sequencer;
 }
 
-multi submethod BUILD ( Code :$transport!, Code :$sequencer? ) {
+multi submethod BUILD ( Code :$!transport!, Code :$!sequencer ) {
 
-    $!transport = $transport;
-    $!sequencer = $sequencer // &sequencer;
 }
 
 sub transport ( URI :$uri, Str :$json, Bool :$get_response ) {
@@ -146,7 +142,7 @@ method !handler( Str :$method!, :$params ) {
     X::JSON::RPC::ProtocolError.new(
         message => 'Request id is different than response id',
         data => { 'request' => %request, 'response' => $response }
-    ).throw unless %request{'id'} eqv $response{'id'};
+    ).throw( ) unless %request{'id'} eqv $response{'id'};
 
     # successful remote procedure call
     return $out;
@@ -170,19 +166,19 @@ method ::('rpc.flush') {
     my $responses;
 
     if @!stack.grep: { $_{'id'}:exists } {
-        $responses = $!transport( json => $requests, get_response => True );
+        $responses = $!transport( json => $requests, :get_response );
     }
     # SPEC: If the batch rpc call itself fails to be recognized (...)
     # as an Array with at least one value,
     # the response from the Server MUST be a single Response object.
     elsif not @!stack.elems {
-        $responses = $!transport( json => $requests, get_response => True );
+        $responses = $!transport( json => $requests, :get_response );
     }
     # SPEC: If there are no Response objects contained within the Response array
     # as it is to be sent to the client, the server MUST NOT return an empty Array
     # and should return nothing at all.
     else {
-        $!transport( json => $requests, get_response => False );
+        $!transport( json => $requests, :!get_response );
         @!stack = ( );
 
         return;
@@ -252,13 +248,13 @@ method ::('rpc.flush') {
         X::JSON::RPC::ProtocolError.new(
             message => 'Cannot match context between Requests and Responses in Batch',
             data => { 'requests' => @!stack, 'responses' => $responses }
-        ).throw unless $found;
+        ).throw( ) unless $found;
 
         LAST {
             X::JSON::RPC::ProtocolError.new(
                 message => 'Amount of Responses in Batch higher than expected',
                 data => { 'requests' => @!stack, 'responses' => $responses }
-            ).throw if $position != $responses.elems - 1;
+            ).throw( ) if $position != $responses.elems - 1;
         }
     }
 

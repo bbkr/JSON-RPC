@@ -38,7 +38,7 @@ method run ( Str :$host = '', Int :$port = 8080, Bool :$debug = False ) {
 
     my $psgi = HTTP::Easy::PSGI.new( :$host, :$port, :$debug );
     $psgi.app( $app );
-    $psgi.run;
+    $psgi.run( );
 }
 
 method handler ( Str :$json! ) {
@@ -59,7 +59,7 @@ method handler ( Str :$json! ) {
             # SPEC: To send several Request objects at the same time,
             # the Client MAY send an Array filled with Request objects.
             # (empty Array is not valid request)
-            X::JSON::RPC::InvalidRequest.new.throw unless $parsed.elems;
+            X::JSON::RPC::InvalidRequest.new.throw( ) unless $parsed.elems;
             @requests = $parsed.list;
         }
         else {
@@ -164,8 +164,8 @@ method !parse_json ( Str $body ) {
 
     try { $parsed = from-json( $body ); };
 
-    X::JSON::RPC::ParseError.new( data => ~$! ).throw if defined $!;
-    X::JSON::RPC::ParseError.new.throw unless $parsed ~~ Array|Hash;
+    X::JSON::RPC::ParseError.new( data => ~$! ).throw( ) if defined $!;
+    X::JSON::RPC::ParseError.new.throw( ) unless $parsed ~~ Array|Hash;
 
     return $parsed;
 }
@@ -206,7 +206,7 @@ method !validate_request ( $request ) {
             $mode = 'Notification';
         }
         default {
-            X::JSON::RPC::InvalidRequest.new.throw;
+            X::JSON::RPC::InvalidRequest.new.throw( );
         }
     }
 
@@ -218,7 +218,7 @@ method !search_method ( Str $name ) {
     # locate public method in application
     my $method = $.application.^find_method( $name );
 
-    X::JSON::RPC::MethodNotFound.new.throw unless $method;
+    X::JSON::RPC::MethodNotFound.new.throw( ) unless $method;
 
     return $method;
 }
@@ -228,7 +228,7 @@ method !validate_params ( Routine $method, |params ) {
     # find all method candidates that recognize passed params
     my @candidates = $method.cando( params );
 
-    X::JSON::RPC::InvalidParams.new.throw unless @candidates;
+    X::JSON::RPC::InvalidParams.new.throw( ) unless @candidates;
 
     # many mathches are not an error
     # first candidate is taken
@@ -246,7 +246,7 @@ method !call ( Method $candidate, |params ) {
 
             # wrap unhandled error type as internal error
             when not $_ ~~ X::JSON::RPC {
-                X::JSON::RPC::InternalError.new( data => .Str ).throw;
+                X::JSON::RPC::InternalError.new( data => .Str ).throw( );
             }
         }
     };

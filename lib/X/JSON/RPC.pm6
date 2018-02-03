@@ -22,7 +22,7 @@ role X::JSON::RPC is Exception {
     # stringify output for debug purposes.
     method Str ( ) {
         my $error = $.message ~ ' (' ~ $.code ~ ')';
-        $error ~= ': ' ~ $.data.perl if $.data.defined;
+        $error ~= ': ' ~ .perl with $.data;
 
         return $error;
     }
@@ -33,7 +33,7 @@ role X::JSON::RPC is Exception {
             'code' => $.code,
             'message' => $.message,
         );
-        %error{'data'} = $.data if $.data.defined;
+        %error{'data'} = $_ with $.data;
 
         return %error;
     }
@@ -50,7 +50,7 @@ role X::JSON::RPC is Exception {
 class X::JSON::RPC::ParseError does X::JSON::RPC {
 
     method new ( :$data ) {
-        self.bless( code => -32700, message => 'Parse error', data => $data );
+        self.bless( code => -32700, message => 'Parse error', :$data );
     }
 
 }
@@ -59,7 +59,7 @@ class X::JSON::RPC::ParseError does X::JSON::RPC {
 class X::JSON::RPC::InvalidRequest does X::JSON::RPC {
 
     method new ( :$data ) {
-        self.bless( code => -32600, message => 'Invalid Request', data => $data );
+        self.bless( code => -32600, message => 'Invalid Request', :$data );
     }
 
 }
@@ -68,7 +68,7 @@ class X::JSON::RPC::InvalidRequest does X::JSON::RPC {
 class X::JSON::RPC::MethodNotFound does X::JSON::RPC {
 
     method new ( :$data ) {
-        self.bless( code => -32601, message => 'Method not found', data => $data );
+        self.bless( code => -32601, message => 'Method not found', :$data );
     }
 
 }
@@ -77,7 +77,7 @@ class X::JSON::RPC::MethodNotFound does X::JSON::RPC {
 class X::JSON::RPC::InvalidParams does X::JSON::RPC {
 
     method new ( :$data ) {
-        self.bless( code => -32602, message => 'Invalid params', data => $data );
+        self.bless( code => -32602, message => 'Invalid params', :$data );
     }
 
 }
@@ -86,7 +86,7 @@ class X::JSON::RPC::InvalidParams does X::JSON::RPC {
 class X::JSON::RPC::InternalError does X::JSON::RPC {
 
     method new ( :$data ) {
-        self.bless( code => -32603, message => 'Internal error', data => $data );
+        self.bless( code => -32603, message => 'Internal error', :$data );
     }
 
 }
@@ -95,7 +95,7 @@ class X::JSON::RPC::InternalError does X::JSON::RPC {
 class X::JSON::RPC::ProtocolError does X::JSON::RPC {
 
     method new ( :$message, :$data ) {
-        self.bless( code => -32000, message => $message // 'Protocol Error', data => $data );
+        self.bless( code => -32000, message => $message // 'Protocol Error', :$data );
     }
 
 }
@@ -104,7 +104,7 @@ class X::JSON::RPC::ProtocolError does X::JSON::RPC {
 class X::JSON::RPC::Transport does X::JSON::RPC {
 
     method new ( :$message ) {
-        self.bless( code => -32001, message => $message );
+        self.bless( code => -32001, :$message );
     }
 
 }
