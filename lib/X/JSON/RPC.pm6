@@ -9,15 +9,15 @@ role X::JSON::RPC is Exception {
 
     # SPEC: A Number that indicates the error type that occurred.
     # This MUST be an integer.
-    has Int $.code is rw;
+    has Int $.code;
 
     # SPEC: A String providing a short description of the error.
     # The message SHOULD be limited to a concise single sentence.
-    has Str $.message is rw;
+    has Str $.message;
 
     # SPEC: A Primitive or Structured value that contains additional information about the error.
     # This may be omitted.
-    has Any $.data is rw;
+    has Any $.data;
 
     # stringify output for debug purposes.
     method Str ( ) {
