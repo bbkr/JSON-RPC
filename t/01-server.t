@@ -25,7 +25,7 @@ class Application {
     has Int $.count is rw;
     method void { return }
     multi method suicide ( Bool :$note! ) { die 'The cake is a lie!' }
-    multi method suicide { CustomError.new.throw }
+    multi method suicide { CustomError.new.throw( ) }
     method !toothbrush { "No!" }
     method rpc { return True }
     method can ( $fish ) { return 'meow' }
@@ -158,14 +158,14 @@ spec(
     'no params and empty response',
     '{"jsonrpc": "2.0", "method": "void", "id": 1}',
     '{"jsonrpc": "2.0", "result": null, "id": 1}',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 spec(
     'method named rpc can be called',
     '{"jsonrpc": "2.0", "method": "rpc", "id": 1}',
     '{"jsonrpc": "2.0", "result": true, "id": 1}',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 spec(
@@ -184,56 +184,56 @@ spec(
     'invalid request (null is not the same as omitted params)',
     '{"jsonrpc": "2.0", "method": "void", "params": null, "id": 1}',
     '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 spec(
     'invalid params (no candidate found)',
     '{"jsonrpc": "2.0", "method": "void", "params": [1,2,3], "id": 1}',
     '{"jsonrpc": "2.0", "error": {"code": -32602, "message": "Invalid params"}, "id": 1}',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 spec(
     'private method not found',
     '{"jsonrpc": "2.0", "method": "toothbrush", "id": 1}',
     '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": 1}',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 spec(
     'batch recursion forbidden',
     '[[{"jsonrpc": "2.0", "method": "void", "id": 1}]]',
     '[{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}]',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 spec(
     'null id does not mean notification (null is not the same as omitted id)',
     '{"jsonrpc": "2.0", "method": "void", "id": null}',
     '{"jsonrpc": "2.0", "result": null, "id": null}',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 spec(
     'internal error',
     '{"jsonrpc": "2.0", "method": "suicide", "params": {"note": true}, "id": 1}',
     '{"jsonrpc": "2.0", "error": {"code": -32603, "message": "Internal error", "data": "The cake is a lie!"}, "id": 1}',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 spec(
     'custom error',
     '{"jsonrpc": "2.0", "method": "suicide", "id": 1}',
     '{"jsonrpc": "2.0", "error": {"code": -1, "message": "GLaDOS is watching", "data": "The cake was a lie."}, "id": 1}',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 spec(
     'can invoke language built-in method name',
     '{"jsonrpc": "2.0", "method": "can", "params": ["tuna"], "id": 1}',
     '{"jsonrpc": "2.0", "result": "meow", "id": 1}',
-    cannonicalize => False
+    :!cannonicalize
 );
 
 is $rpc.application.count, 7, 'notification was processed';

@@ -69,7 +69,7 @@ spec(
     'rpc call with invalid JSON',
     '{"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]',
     '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}',
-    force => True
+    :force
 );
 try { $rpc.dummy( ) };
 isa-ok $!, X::JSON::RPC::ParseError, $name;
@@ -78,7 +78,7 @@ spec(
     'rpc call with invalid Request object',
     '{"jsonrpc": "2.0", "method": 1, "params": "bar"}',
     '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}',
-    force => True
+    :force
 );
 try { $rpc.dummy( ) };
 isa-ok $!, X::JSON::RPC::InvalidRequest, $name;
@@ -90,7 +90,7 @@ spec(
       {"jsonrpc": "2.0", "method"
     ]',
     '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}',
-    force => True
+    :force
 );
 try {
     $rpc.'rpc.batch'( ).dummy( );
@@ -112,7 +112,7 @@ spec(
     '[
       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
     ]',
-    force => True
+    :force
 );
 lives-ok {
     $rpc.'rpc.batch'( ).dummy( );
@@ -129,7 +129,7 @@ spec(
       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
       {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}
     ]',
-    force => True
+    :force
 );
 lives-ok {
     $rpc.'rpc.batch'( ).dummy( );
@@ -161,7 +161,7 @@ spec(
         {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "5"},
         {"jsonrpc": "2.0", "result": ["hello", 5], "id": "9"}
     ]',
-    ids => [ '1', '2', Any:U, '5', '9' ], force => True
+    ids => [ '1', '2', Any:U, '5', '9' ], :force
 );
 lives-ok {
     $rpc.'rpc.batch'( ).addition( 1, 2, 4 );

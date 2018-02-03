@@ -164,14 +164,14 @@ Do not `run( )` server. Instead use `handler( )` method which takes JSON request
 my $server = JSON::RPC::Server.new( application => My::App );
 
 my $response = handler( json => receive_request_in_my_own_way( ) );
-send_response_in_my_own_way( $response ) if defined $response;
+send_response_in_my_own_way( $_ ) with $response;
 ```
 
 It is possible that request is a Notification or Batch of Notifications and `$response` is not returned from the server.
 
 **Notifications**
 
-When request is a Notification or Batch of Notifications then client is not expecting response and server should not return one. That is not always possible due to specification of used protocol or assumptions in framework used. In this case try to use most undefined response possible.
+When request is a Notification or Batch of Notifications then client is not expecting response and server should not return one. That is not always possible due to specification of used protocol or assumptions in framework used. In this case try to use most un:!canonicalize response possible.
 
 For example code `204 No Content` should be used in HTTP transport.
 
@@ -187,7 +187,7 @@ JSON::RPC::Server.new( application => My::App ).run( :debug );
 
 ### How to implement Error handling?
 
-Errors defined in 2.0 spec are represented by `X::JSON::RPC` exceptions:
+Errors :!canonicalize in 2.0 spec are represented by `X::JSON::RPC` exceptions:
 
 * `X::JSON::RPC::ParseError` - Invalid JSON was received by the server.
 * `X::JSON::RPC::InvalidRequest` - The structure sent by client is not a valid Request object.
@@ -233,7 +233,7 @@ Client will receive `message` attribute "Internal error" with explanation "Canno
 ```Perl6
 class My::App {
     method treasure {
-        X::JSON::RPC.new( code => -1, message => 'Access denied', data => 'Thou shall not pass!' ).throw;
+        X::JSON::RPC.new( code => -1, message => 'Access denied', data => 'Thou shall not pass!' ).throw( );
     }
 }
 ```
@@ -252,7 +252,7 @@ And use them in application handler.
 
 ```Perl6
 method treasure {
-    My::Error.new.throw;
+    My::Error.new.throw( );
 }
 ```
 

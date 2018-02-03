@@ -108,7 +108,7 @@ method !handler( Str :$method!, :$params ) {
     # SPEC: A Structured value that holds the parameter values
     # to be used during the invocation of the method.
     # This member MAY be omitted.
-    %request{'params'} = $params if $params.defined;
+    %request{'params'} = $_ with $params;
 
     # Requests in Batch are not processed until rpc.flush method is called.
     if $.is_batch {
@@ -124,18 +124,18 @@ method !handler( Str :$method!, :$params ) {
     # SPEC: A Request object that is a Notification signifies
     # the Client's lack of interest in the corresponding Response object.
     if $.is_notification {
-        $!transport( json => $request, get_response => False );
+        $!transport( json => $request, :!get_response );
         return;
     }
     else {
-        $response = $!transport( json => $request, get_response => True );
+        $response = $!transport( json => $request, :get_response );
     }
 
     $response = self!parse_json( $response );
     my $out = self!validate_response( $response );
 
     # failed procedure call, throw exception.
-    $out.throw if $out ~~ X::JSON::RPC;
+    $out.throw( ) if $out ~~ X::JSON::RPC;
 
     # SPEC: This member is REQUIRED.
     # It MUST be the same as the value of the id member in the Request Object.
@@ -189,7 +189,7 @@ method ::('rpc.flush') {
     # throw Exception if Server was unable to process Batch
     # and returned single Response object with error
     if $responses ~~ Hash {
-        self!bind_error( $responses{'error'} ).throw;
+        self!bind_error( $responses{'error'} ).throw( );
     }
 
     for $responses.list -> $response {
@@ -270,8 +270,8 @@ method !parse_json ( Str $body ) {
 
     try { $parsed = from-json( $body ); };
 
-    X::JSON::RPC::ProtocolError.new( data => ~$! ).throw if defined $!;
-    X::JSON::RPC::ProtocolError.new.throw unless $parsed ~~ Array|Hash;
+    X::JSON::RPC::ProtocolError.new( data => ~$! ).throw( ) if defined $!;
+    X::JSON::RPC::ProtocolError.new.throw( ) unless $parsed ~~ Array|Hash;
 
     return $parsed;
 }
@@ -311,7 +311,7 @@ method !validate_response ( $response ) {
             X::JSON::RPC::ProtocolError.new(
                 message => 'Invalid Response',
                 data => $response
-            ).throw;
+            ).throw( );
         }
     }
 }
@@ -338,7 +338,7 @@ method !bind_error ( $error ) {
     X::JSON::RPC::ProtocolError.new(
         message => 'Invalid Error',
         data => $error
-    ).throw unless $error ~~ :( ErrorMemberCode :$code!, ErrorMemberMessage :$message!, ErrorMemberData :$data? );
+    ).throw( ) unless $error ~~ :( ErrorMemberCode :$code!, ErrorMemberMessage :$message!, ErrorMemberData :$data? );
 
     given $error{'code'} {
         when -32700 {
