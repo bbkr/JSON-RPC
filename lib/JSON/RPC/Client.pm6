@@ -28,18 +28,18 @@ BEGIN {
 
             # placeholder variables cannot be passed-through
             # so dispatch has to be done manually depending on nature of passed params
-            method ( *@positional, *%named ) {
+            method ( *@params, *%params ) {
 
-                if @positional  and %named {
+                if @params  and %params {
                     X::JSON::RPC::ProtocolError.new(
                         message => 'Cannot use positional and named params at the same time'
-                    ).throw;
+                    ).throw( );
                 }
-                elsif @positional {
-                    $object!handler( :$method, params => @positional );
+                elsif @params {
+                    $object!handler( :$method, :@params );
                 }
-                elsif %named {
-                    $object!handler( :$method, params => %named );
+                elsif %params {
+                    $object!handler( :$method, :%params );
                 }
                 else {
                     $object!handler( :$method );
