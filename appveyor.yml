@@ -11,14 +11,12 @@ install:
   - rakudobrew build moar
   - rakudobrew build zef
   - cd %APPVEYOR_BUILD_FOLDER%
-  - zef --depsonly install .
-  - zef install Test::META
+  - zef --depsonly --force-test install .
   - zef build .
 
 build: off
 
 test_script:
-  - prove -ve "perl6 -Ilib" t
-  - set TEST_AUTHOR=1 && prove -ve "perl6 -Ilib" t
+  - prove -e "perl6 -Ilib" t
 
 shallow_clone: true

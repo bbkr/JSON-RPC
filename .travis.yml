@@ -4,4 +4,4 @@ os:
     - osx
 install:
     - rakudobrew build zef
-    - zef --depsonly install .
+    - zef --depsonly --force-test install .
