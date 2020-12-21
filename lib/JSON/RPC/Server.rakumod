@@ -2,7 +2,7 @@ use JSON::Tiny;
 use X::JSON::RPC;
 use HTTP::Easy::PSGI;
 
-unit class JSON::RPC::Server;
+unit class JSON::RPC::Server:auth<github:bbkr>:ver<1.0.2>;
 
 # application to dispatch requests to
 has Any $.application is rw = Any.new;
@@ -253,13 +253,3 @@ method !call ( Method $candidate, |params ) {
 
     return $result;
 }
-
-=begin pod
-
-=TITLE class JSON::RPC::Server
-
-Server implementing JSON-RPC 2.0 protocol.
-
-Please check online documentation at L<https://github.com/bbkr/jsonrpc>.
-
-=end pod

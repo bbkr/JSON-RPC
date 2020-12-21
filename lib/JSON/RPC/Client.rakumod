@@ -4,7 +4,7 @@ use HTTP::Request;
 use JSON::Tiny;
 use X::JSON::RPC;
 
-unit class JSON::RPC::Client;
+unit class JSON::RPC::Client:auth<github:bbkr>:ver<1.0.1>;
 
 has Code $!transport;
 has Code $!sequencer;
@@ -361,13 +361,3 @@ method !bind_error ( $error ) {
         }
     }
 }
-
-=begin pod
-
-=TITLE class JSON::RPC::Client
-
-Client implementing JSON-RPC 2.0 protocol.
-
-Please check online documentation at L<https://github.com/bbkr/jsonrpc>.
-
-=end pod

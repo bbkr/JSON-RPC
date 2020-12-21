@@ -1,28 +1,23 @@
 {
     "perl": "6.c",
+    "name": "JSON::RPC",
+    "version": "1.0.1",
+    "description": "JSON-RPC 2.0 client and server.",
     "authors": [
-        "Pawel (bbkr) Pabian",
+        "Paweł bbkr Pabian",
         "Ahmad M. Zawawi (azawawi)"
     ],
-    "authority": "bbkr",
     "depends": [
         "JSON::Tiny",
         "URI",
         "HTTP::Easy",
         "HTTP::UserAgent"
     ],
-    "test-depends": [
-        "Test"
-    ],
-    "description": "JSON-RPC 2.0 client and server.",
-    "name": "JSON::RPC",
     "provides": {
-        "JSON::RPC::Client": "lib/JSON/RPC/Client.pm6",
-        "JSON::RPC::Server": "lib/JSON/RPC/Server.pm6",
-        "X::JSON::RPC": "lib/X/JSON/RPC.pm6"
+        "JSON::RPC::Client": "lib/JSON/RPC/Client.rakumod",
+        "JSON::RPC::Server": "lib/JSON/RPC/Server.rakumod",
+        "X::JSON::RPC": "lib/X/JSON/RPC.rakumod"
     },
-    "repo-type": "git",
-    "source-url": "git://github.com/bbkr/jsonrpc.git",
-    "version": "1.0.0",
-    "license" : "Artistic-2.0"
+    "license" : "Artistic-2.0",
+    "source-url": "git://github.com/bbkr/jsonrpc.git"
 }

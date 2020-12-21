@@ -1,13 +1,12 @@
-# JSON-RPC client and server
+# JSON-RPC client and server for [Raku](https://www.raku.org) language
 
-[![Build Status](https://travis-ci.org/bbkr/jsonrpc.svg)](https://travis-ci.org/bbkr/jsonrpc)
-[![Build status](https://ci.appveyor.com/api/projects/status/github/bbkr/jsonrpc?svg=true)](https://ci.appveyor.com/project/bbkr/jsonrpc/branch/master)
+![test](https://github.com/bbkr/jsonrpc/workflows/test/badge.svg)
 
 Supports [2.0 specification](http://www.jsonrpc.org/specification).
 
 ## CLIENT
 
-```Perl6
+```raku
 use JSON::RPC::Client;
 
 # create new client with url to server
@@ -25,7 +24,7 @@ say $c.hello( name => 'John Doe' );
 
 ## SERVER
 
-```Perl6
+```raku
 use JSON::RPC::Server;
 
 # define application class
@@ -74,7 +73,7 @@ There are 4 specs of JSON-RPC published so far:
 
 Use `uri` param in constructor.
 
-```Perl6
+```raku
 JSON::RPC::Client.new( uri => URI.new( 'http://127.0.0.1:8080' ) );
 ```
 
@@ -82,7 +81,7 @@ JSON::RPC::Client.new( uri => URI.new( 'http://127.0.0.1:8080' ) );
 
 Use `port` param in `run( )` method.
 
-```Perl6
+```raku
 JSON::RPC::Server.new( application => My::App ).run( port => 9999 );
 ```
 
@@ -90,7 +89,7 @@ JSON::RPC::Server.new( application => My::App ).run( port => 9999 );
 
 You can use both. Using class name results in static dispatch while using object instance allows you to initialize attributes in your class.
 
-```Perl6
+```raku
 class My::App {
 
     has $!db;
@@ -111,7 +110,7 @@ JSON::RPC::Server.new( application => My::App.new ).run( );
 
 Declare it as private.
 
-```Perl6
+```raku
 method !get_database_info ( ) {
     return 'username', 'password';
 }
@@ -121,7 +120,7 @@ method !get_database_info ( ) {
 
 It is recommended that you validate params in signatures instead of method bodies. This way server correctly returns "Invalid params" error (more info later) and method is not called if signature does not match - you can easily separate validation from logic.
 
-```Perl6
+```raku
 method add_programmer (
     Str :$name!,
     Int :$age! where { $age >= 0 },
@@ -136,7 +135,7 @@ method add_programmer (
 
 ### What happens when more than one server handler candidate matches?
 
-When request can be dispatched to more than one multi method then first candidate is chosen and called. JSON-RPC protocol design does not include multi methods - it can not mimic [calling sets](http://perlcabal.org/syn/S12.html#Calling_sets_of_methods) mechanism and does not have "Ambiguous call" error in specification like Perl 6 does. Therefore such request is not considered an error.
+When request can be dispatched to more than one multi method then first candidate is chosen and called. JSON-RPC protocol design does not include multi methods - it can not mimic [calling sets](https://docs.raku.org/language/operators#methodop_.*) mechanism and does not have "Ambiguous call" error in specification like Raku does. Therefore such request is not considered an error.
 
 ### Can I use my own transport layers?
 
@@ -146,7 +145,7 @@ This is useful when you want to use JSON-RPC on some framework which provides it
 
 Pass `transport` param to `new( )` instead of `uri`/ `url` param. This should be a closure that accepts JSON request and returns JSON response.
 
-```Perl6
+```raku
 sub transport ( Str :$json, Bool :$get_response ) {
     return send_request_in_my_own_way_and_obtain_response_if_needed( $request );
 }
@@ -160,7 +159,7 @@ Your transport will be given extra param `get_response` which informs if respons
 
 Do not `run( )` server. Instead use `handler( )` method which takes JSON request param and returns JSON response.
 
-```Perl6
+```raku
 my $server = JSON::RPC::Server.new( application => My::App );
 
 my $response = handler( json => receive_request_in_my_own_way( ) );
@@ -181,7 +180,7 @@ For example code `204 No Content` should be used in HTTP transport.
 
 **Server** accepts `debug` param in `run( )` method.
 
-```Perl6
+```raku
 JSON::RPC::Server.new( application => My::App ).run( :debug );
 ```
 
@@ -200,7 +199,7 @@ Every exception has numeric `code` attribute that indicates the error type that 
 
 **Client** can catch those exceptions.
 
-```Perl6
+```raku
 try {
     $c.hello( 'John Doe' );
     CATCH {
@@ -219,7 +218,7 @@ try {
 
 * End method using die.
 
-```Perl6
+```raku
 method divide ( Int $x, Int $y ) {
     die 'Cannot divide by 0' if $y ~~ 0;
     return $x / $y;
@@ -230,7 +229,7 @@ Client will receive `message` attribute "Internal error" with explanation "Canno
 
 * Throw `X::JSON::RPC` exception.
 
-```Perl6
+```raku
 class My::App {
     method treasure {
         X::JSON::RPC.new( code => -1, message => 'Access denied', data => 'Thou shall not pass!' ).throw( );
@@ -240,7 +239,7 @@ class My::App {
 
 Exception `X::JSON::RPC` is composable so you can easily define your own errors.
 
-```perl
+```raku
     class My::Error does X::JSON::RPC {
         method new {
             self.bless( code => -1, message => 'Access denied', data => 'Thou shall not pass!' );
@@ -250,7 +249,7 @@ Exception `X::JSON::RPC` is composable so you can easily define your own errors.
 
 And use them in application handler.
 
-```Perl6
+```raku
 method treasure {
     My::Error.new.throw( );
 }
@@ -261,14 +260,14 @@ method treasure {
 Method `'rpc.notification'( )` puts client in notification context.
 Note that this method contains dot in name and it must be quoted.
 
-```Perl6
+```raku
 $client.'rpc.notification'( ).heartbeat( ); # no response from this one
 say $client.ping( ) # regular call again
 ```
 
 You can save client context to avoid typing.
 
-```Perl6
+```raku
 my $n = $client.'rpc.notification'( );
 for ^1024 {
     $n.heartbeat( ); # no responses from those
@@ -280,7 +279,7 @@ for ^1024 {
 Method `'rpc.batch'( )` puts client in batch context while method `'rpc.flush'( )` sends Requests.
 Note that those methods contain dot in names and they must be quoted.
 
-```Perl6
+```raku
 $client.'rpc.batch'( ).add( 2, 2 );
 $client.'rpc.batch'( ).'rpc.notification'( ).heartbeat( );
 $client.'rpc.batch'( ).suicide( );
@@ -312,7 +311,7 @@ Important things to remember:
 
 You can save client context to avoid typing.
 
-```Perl6
+```raku
 my $b = $client.'rpc.batch'( );
 for ^1024 {
     $b.is_prime( $_ );
@@ -322,28 +321,23 @@ my @responses = $b.'rpc.flush'( );
 
 ### How to call method that has name used by language itself?
 
-Every object instance has some methods inherited from [Mu](http://doc.perl6.org/type/Mu) and [Any](http://doc.perl6.org/type/Any) classes.
+Every object instance has some methods inherited from [Mu](https://docs.raku.org/type/Mu) and [Any](https://docs.raku.org/type/Any) classes.
 This rule also applies to `JSON::RPC::Client` and in rare cases you may fall into the trap.
 Below example calls `Mu::can( )` instead of doing remote procedure call of method named "can".
 
-```Perl6
+```raku
 $client.can( 'tuna' );
 ```
 
 The workaround is to prefix method name with `rpc.`.
 Note that whole name must be quoted because it contains dot.
 
-```Perl6
+```raku
 $client.'rpc.can'( 'tuna' );
 ```
 
 You can get full list of those troublemakers by invoking following code.
 
-```Perl6
+```raku
 JSON::RPC::Client.^mro>>.^methods>>.say
 ```
-
-## CONTACT
-
-You can find me (and many awesome people who helped me to develop this module)
-on irc.freenode.net #perl6 channel as **bbkr**.
