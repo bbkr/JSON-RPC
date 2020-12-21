@@ -71,7 +71,7 @@ sub transport ( URI :$uri, Str :$json, Bool :$get_response ) {
     $request.uri( $uri );
     $request.set-method( 'POST' );
     $request.add-content( $json );
-    $request.header.field( Content-Type => 'aplication/json' );
+    $request.header.field( Content-Type => 'application/json' );
     
     my $response = HTTP::UserAgent.new.request( $request );
     X::JSON::RPC::Transport.new( message => $response.status-line ).throw( ) unless $response.is-success;
