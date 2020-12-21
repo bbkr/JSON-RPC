@@ -19,5 +19,5 @@
         "X::JSON::RPC": "lib/X/JSON/RPC.rakumod"
     },
     "license" : "Artistic-2.0",
-    "source-url": "git://github.com/bbkr/jsonrpc.git"
+    "source-url": "git://github.com/bbkr/JSON-RPC.git"
 }

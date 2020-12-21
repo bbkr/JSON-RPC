@@ -22,7 +22,7 @@ role X::JSON::RPC is Exception {
     # stringify output for debug purposes.
     method Str ( ) {
         my $error = $.message ~ ' (' ~ $.code ~ ')';
-        $error ~= ': ' ~ .perl with $.data;
+        $error ~= ': ' ~ .raku with $.data;
 
         return $error;
     }

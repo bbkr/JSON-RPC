@@ -1,6 +1,6 @@
 # JSON-RPC client and server for [Raku](https://www.raku.org) language
 
-![test](https://github.com/bbkr/jsonrpc/workflows/test/badge.svg)
+![test](https://github.com/bbkr/JSON-RPC/workflows/test/badge.svg)
 
 Supports [2.0 specification](http://www.jsonrpc.org/specification).
 
