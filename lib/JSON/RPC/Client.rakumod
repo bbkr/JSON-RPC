@@ -84,7 +84,6 @@ method !handler( Str :$method!, :$params ) {
     # to be used during the invocation of the method.
     # This member MAY be omitted.
     %request{'params'} = $_ with $params;
-    note %request.raku;
 
     # Requests in Batch are not processed until rpc.flush method is called.
     if $.is_batch {
