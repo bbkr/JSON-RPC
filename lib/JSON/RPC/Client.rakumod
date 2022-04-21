@@ -4,7 +4,7 @@ use HTTP::Request;
 use JSON::Tiny;
 use X::JSON::RPC;
 
-unit class JSON::RPC::Client:auth<github:bbkr>:ver<1.0.1>;
+unit class JSON::RPC::Client:auth<github:bbkr>:ver<1.0.3>;
 
 has Code $!transport;
 has Code $!sequencer;
@@ -13,18 +13,20 @@ has Bool $.is_notification = False;
 has @!stack = ( );
 
 method FALLBACK($method, **@params, *%params ) {
-  # workaround to allow dispatch to methods inherited from Any( ) and Mu( )
-  return self.FALLBACK(~$/[0], |@params, |%params) if $method ~~ /^rpc\.(.*)/;
 
-  if @params and %params {
-    X::JSON::RPC::ProtocolError.new(
-	message => 'Cannot use positional and named params at the same time'
-	).throw( );
-  }
-  elsif @params { self!handler: :$method, :@params }
-  elsif %params { self!handler: :$method, :%params }
-  else          { self!handler: :$method           }
-};
+    # workaround to allow dispatch to methods inherited from Any( ) and Mu( )
+    return self.FALLBACK(~$/[0], |@params, |%params) if $method ~~ /^rpc\.(.*)/;
+
+    if @params and %params {
+        X::JSON::RPC::ProtocolError.new(
+            message => 'Cannot use positional and named params at the same time'
+        ).throw( );
+    }
+    elsif @params { self!handler: :$method, :@params }
+    elsif %params { self!handler: :$method, :%params }
+    else          { self!handler: :$method           }
+
+}
 
 multi submethod BUILD ( URI :$uri!, Code :$!sequencer = &sequencer ) {
 

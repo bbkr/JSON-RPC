@@ -2,7 +2,7 @@ use JSON::Tiny;
 use X::JSON::RPC;
 use HTTP::Easy::PSGI;
 
-unit class JSON::RPC::Server:auth<github:bbkr>:ver<1.0.2>;
+unit class JSON::RPC::Server:auth<github:bbkr>:ver<1.0.3>;
 
 # application to dispatch requests to
 has Any $.application is rw = Any.new;

@@ -1,7 +1,7 @@
 {
     "perl": "6.c",
     "name": "JSON::RPC",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "description": "JSON-RPC 2.0 client and server.",
     "authors": [
         "Paweł bbkr Pabian",
