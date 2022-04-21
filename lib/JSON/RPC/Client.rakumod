@@ -12,44 +12,19 @@ has Bool $.is_batch = False;
 has Bool $.is_notification = False;
 has @!stack = ( );
 
-BEGIN {
+method FALLBACK($method, **@params, *%params ) {
+  # workaround to allow dispatch to methods inherited from Any( ) and Mu( )
+  return self.FALLBACK(~$/[0], |@params, |%params) if $method ~~ /^rpc\.(.*)/;
 
-    # install method auto dispatch
-    $?PACKAGE.HOW.add_fallback(
-        $?PACKAGE,
-
-        # must return True or False to indicate if it can handle the fallback
-        -> $, $name { True },
-
-        # should return the Code object to invoke
-        -> $object, $name {
-            # workaround to allow dispatch to methods inherited from Any( ) and Mu( )
-            my $method = $name.subst(/^rpc\./, '');
-
-            # placeholder variables cannot be passed-through
-            # so dispatch has to be done manually depending on nature of passed params
-            method ( *@params, *%params ) {
-
-                if @params  and %params {
-                    X::JSON::RPC::ProtocolError.new(
-                        message => 'Cannot use positional and named params at the same time'
-                    ).throw( );
-                }
-                elsif @params {
-                    $object!handler( :$method, :@params );
-                }
-                elsif %params {
-                    $object!handler( :$method, :%params );
-                }
-                else {
-                    $object!handler( :$method );
-                }
-            };
-
-        }
-    );
-
-}
+  if @params and %params {
+    X::JSON::RPC::ProtocolError.new(
+	message => 'Cannot use positional and named params at the same time'
+	).throw( );
+  }
+  elsif @params { self!handler: :$method, :@params }
+  elsif %params { self!handler: :$method, :%params }
+  else          { self!handler: :$method           }
+};
 
 multi submethod BUILD ( URI :$uri!, Code :$!sequencer = &sequencer ) {
 
