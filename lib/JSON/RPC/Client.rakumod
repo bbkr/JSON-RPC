@@ -4,7 +4,7 @@ use HTTP::Request;
 use JSON::Tiny;
 use X::JSON::RPC;
 
-unit class JSON::RPC::Client:auth<github:bbkr>:ver<1.0.3>;
+unit class JSON::RPC::Client;
 
 has Code $!transport;
 has Code $!sequencer;
